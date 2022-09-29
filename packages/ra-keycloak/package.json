@@ -1,0 +1,35 @@
+{
+    "name": "ra-keycloak",
+    "version": "1.0.0",
+    "repository": "git@github.com:marmelab/ra-keycloak.git",
+    "authors": [
+        "Matthieu Chaffotte",
+        "Anthony Rimet"
+    ],
+    "license": "MIT",
+    "files": [
+        "*.md",
+        "lib",
+        "esm",
+        "src"
+    ],
+    "main": "lib/index",
+    "module": "esm/index.js",
+    "types": "esm/index.d.ts",
+    "sideEffects": false,
+    "peerDependencies": {
+        "ra-core": "*"
+    },
+    "dependencies": {
+        "jwt-decode": "^3.1.2",
+        "keycloak-js": "^19.0.2"
+    },
+    "scripts": {
+        "build": "yarn run build-cjs && yarn run build-esm",
+        "build-cjs": "rimraf ./lib && tsc",
+        "build-esm": "rimraf ./esm && tsc --outDir esm --module es2015",
+        "watch": "tsc --outDir esm --module es2015 --watch",
+        "lint": "eslint --fix ./src",
+        "test-unit": "jest ./src"
+    }
+}
