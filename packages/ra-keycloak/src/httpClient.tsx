@@ -6,15 +6,16 @@ import Keycloak from 'keycloak-js';
  * @param keycloak the client for the Keycloak authentication server.
  * @returns the response for the resource
  */
-export const httpClient =
-    (keycloak: Keycloak) =>
-    (url: any, options: fetchUtils.Options | undefined) => {
-        const requestHeaders = getKeycloakHeaders(keycloak.token, options);
-        return fetchUtils.fetchJson(url, {
-            ...options,
-            headers: requestHeaders,
-        });
-    };
+export const httpClient = (keycloak: Keycloak) => (
+    url: any,
+    options: fetchUtils.Options | undefined
+) => {
+    const requestHeaders = getKeycloakHeaders(keycloak.token, options);
+    return fetchUtils.fetchJson(url, {
+        ...options,
+        headers: requestHeaders,
+    });
+};
 
 /**
  * Return the headers with Keycloak token.
