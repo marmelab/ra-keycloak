@@ -1,2 +1,2 @@
 export * from './httpClient';
-export * from './useAuthProvider';
+export * from './authProvider';
