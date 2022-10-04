@@ -14,7 +14,7 @@ This package uses [keycloak-js](https://www.npmjs.com/package/keycloak-js) to ha
 ```sh
 yarn add ra-keycloak
 # or
-npm install ra-keycloak
+npm install --save ra-keycloak
 ```
 
 ## Usage

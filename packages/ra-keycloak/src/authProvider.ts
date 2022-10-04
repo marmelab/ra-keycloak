@@ -2,7 +2,7 @@ import { AuthProvider } from 'react-admin';
 import Keycloak, { KeycloakTokenParsed } from 'keycloak-js';
 import jwt_decode from 'jwt-decode';
 
-export type PermissionsFunction = (decoded: KeycloakTokenParsed) => boolean;
+export type PermissionsFunction = (decoded: KeycloakTokenParsed) => any;
 
 /**
  * An authProvider which handles authentication via the Keycloak server.
@@ -75,24 +75,22 @@ export const keycloakAuthProvider = (
     client: Keycloak,
     options: {
         onPermissions?: PermissionsFunction;
-        redirectLogin?: string;
-        redirectLogout?: string;
+        loginRedirectUri?: string;
+        logoutRedirectUri?: string;
     } = {}
 ): AuthProvider => ({
     async login() {
         return client.login({
-            redirectUri:
-                options.redirectLogin ?? window.location.origin + '/#/',
+            redirectUri: options.loginRedirectUri ?? window.location.origin,
         });
     },
     async logout() {
         return client.logout({
-            redirectUri:
-                options.redirectLogout ?? window.location.origin + '/#/login',
+            redirectUri: options.logoutRedirectUri ?? window.location.origin,
         });
     },
     async checkError() {
-        return;
+        return Promise.resolve();
     },
     async checkAuth() {
         return client.authenticated && client.token
@@ -110,7 +108,7 @@ export const keycloakAuthProvider = (
         if (client.token) {
             const decoded = jwt_decode<KeycloakTokenParsed>(client.token);
             const id = decoded.sub || '';
-            const fullName = decoded.name;
+            const fullName = decoded.preferred_username;
             return Promise.resolve({ id, fullName });
         }
         return Promise.reject('Failed to get identity.');

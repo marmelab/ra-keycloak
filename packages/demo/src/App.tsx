@@ -1,98 +1,122 @@
 /* eslint react/jsx-key: off */
-import * as React from 'react';
-import { Admin, Resource, CustomRoutes, AuthProvider } from 'react-admin'; // eslint-disable-line import/no-unresolved
+import React, { useState, useRef, useEffect } from 'react';
+import {
+    Admin,
+    Resource,
+    CustomRoutes,
+    AuthProvider,
+    DataProvider,
+} from 'react-admin';
 import { Route } from 'react-router-dom';
+import Keycloak, {
+    KeycloakConfig,
+    KeycloakTokenParsed,
+    KeycloakInitOptions,
+} from 'keycloak-js';
+import { keycloakAuthProvider } from 'ra-keycloak';
 
 import comments from './comments';
 import CustomRouteLayout from './customRouteLayout';
 import CustomRouteNoLayout from './customRouteNoLayout';
-import dataProvider from './dataProvider';
+import myDataProvider, {
+    keyCloakTokenDataProviderBuilder,
+} from './dataProvider';
 import i18nProvider from './i18nProvider';
 import Layout from './Layout';
 import posts from './posts';
 import users from './users';
 import tags from './tags';
-import Keycloak, { KeycloakConfig } from 'keycloak-js';
-import { keycloakAuthProvider } from 'ra-keycloak';
+
+const config: KeycloakConfig = {
+    url: 'http://localhost:8080/auth',
+    realm: 'Marmelab',
+    clientId: 'front-marmelab',
+};
+
+const initOptions: KeycloakInitOptions = { onLoad: 'login-required' };
+
+const getPermissions = (decoded: KeycloakTokenParsed) => {
+    const roles = decoded?.realm_access?.roles;
+    if (!roles) {
+        return false;
+    }
+    if (roles.includes('admin')) return 'admin';
+    if (roles.includes('user')) return 'user';
+    return false;
+};
 
 const App = () => {
-    const [authProvider, setAuthProvider] = React.useState<AuthProvider | null>(
-        null
-    );
+    const [keycloak, setKeycloak] = useState<Keycloak>(undefined);
+    const authProvider = useRef<AuthProvider>(undefined);
+    const dataProvider = useRef<DataProvider>(undefined);
 
-    React.useEffect(() => {
-        async function startAuthProvider() {
-            const config: KeycloakConfig = {
-                url: 'http://localhost:8080/auth',
-                realm: 'Marmelab',
-                clientId: 'front-marmelab',
-            };
-
-            const keycloak = new Keycloak(config);
-            await keycloak.init({ onLoad: 'login-required' });
-            const authProvider = keycloakAuthProvider(keycloak, {});
-            setAuthProvider(authProvider);
+    useEffect(() => {
+        const initKeyCloakClient = async () => {
+            const keycloakClient = new Keycloak(config);
+            await keycloakClient.init(initOptions);
+            authProvider.current = keycloakAuthProvider(keycloakClient, {
+                onPermissions: getPermissions,
+            });
+            dataProvider.current = keyCloakTokenDataProviderBuilder(
+                myDataProvider,
+                keycloakClient
+            );
+            setKeycloak(keycloakClient);
+        };
+        if (!keycloak) {
+            initKeyCloakClient();
         }
-        if (authProvider === null) {
-            startAuthProvider();
-        }
-    }, [authProvider]);
+    }, [keycloak]);
 
-    // hide the admin until the data provider is ready
-    if (!authProvider) return <p>Loading...</p>;
+    // hide the admin until the dataProvider and authProvider are ready
+    if (!keycloak) return <p>Loading...</p>;
 
     return (
         <Admin
-            authProvider={authProvider}
-            dataProvider={dataProvider}
+            authProvider={authProvider.current}
+            dataProvider={dataProvider.current}
             i18nProvider={i18nProvider}
             title="Example Admin"
             layout={Layout}
         >
-            <>
-                <CustomRoutes noLayout>
-                    <Route
-                        path="/custom"
-                        element={
-                            <CustomRouteNoLayout title="Posts from /custom" />
-                        }
-                    />
-                </CustomRoutes>
-                <Resource name="posts" {...posts} />
-                <Resource name="comments" {...comments} />
-                <Resource name="tags" {...tags} />
-                {permissions => (
-                    <>
-                        {permissions ? (
-                            <Resource name="users" {...users} />
-                        ) : null}
-                        <CustomRoutes noLayout>
-                            <Route
-                                path="/custom1"
-                                element={
-                                    <CustomRouteNoLayout title="Posts from /custom1" />
-                                }
-                            />
-                        </CustomRoutes>
-                        <CustomRoutes>
-                            <Route
-                                path="/custom2"
-                                element={
-                                    <CustomRouteLayout title="Posts from /custom2" />
-                                }
-                            />
-                        </CustomRoutes>
-                    </>
-                )}
-                <CustomRoutes>
-                    <Route
-                        path="/custom3"
-                        element={
-                            <CustomRouteLayout title="Posts from /custom3" />
-                        }
-                    />
-                </CustomRoutes>
-            </>
+            <CustomRoutes noLayout>
+                <Route
+                    path="/custom"
+                    element={<CustomRouteNoLayout title="Posts from /custom" />}
+                />
+            </CustomRoutes>
+            <Resource name="posts" {...posts} />
+            <Resource name="comments" {...comments} />
+            <Resource name="tags" {...tags} />
+            {permissions => (
+                <>
+                    {permissions === 'admin' ? (
+                        <Resource name="users" {...users} />
+                    ) : null}
+                    <CustomRoutes noLayout>
+                        <Route
+                            path="/custom1"
+                            element={
+                                <CustomRouteNoLayout title="Posts from /custom1" />
+                            }
+                        />
+                    </CustomRoutes>
+                    <CustomRoutes>
+                        <Route
+                            path="/custom2"
+                            element={
+                                <CustomRouteLayout title="Posts from /custom2" />
+                            }
+                        />
+                    </CustomRoutes>
+                </>
+            )}
+            <CustomRoutes>
+                <Route
+                    path="/custom3"
+                    element={<CustomRouteLayout title="Posts from /custom3" />}
+                />
+            </CustomRoutes>
         </Admin>
     );
 };

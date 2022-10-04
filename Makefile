@@ -17,7 +17,11 @@ build-ra-keycloak:
 	@echo "Transpiling ra-keycloak files...";
 	@cd ./packages/ra-keycloak && yarn -s build
 
-build: build-ra-keycloak ## compile ES6 files to JS
+build-demo:
+	@echo "Transpiling demo files...";
+	@cd ./packages/demo && yarn -s build
+
+build: build-ra-keycloak build-demo ## compile ES6 files to JS
 
 lint: ## lint the code and check coding conventions
 	@echo "Running linter..."
@@ -32,3 +36,19 @@ test: build test-unit lint ## launch all tests
 test-unit: ## launch unit tests
 	echo "Running unit tests...";
 	yarn -s test-unit;
+
+run-demo:
+	@cd ./packages/demo && yarn start
+
+run: keycloak-start run-demo
+
+DOCKER_COMPOSE = docker-compose -p ra-keycloak -f ./packages/demo/docker-compose.yml
+
+keycloak-start: ## Start the project with docker.
+	$(DOCKER_COMPOSE) up --force-recreate -d
+
+keycloak-logs: ## Display logs
+	$(DOCKER_COMPOSE) logs -f
+
+keycloak-stop: ## Stop the project with docker.
+	$(DOCKER_COMPOSE) down

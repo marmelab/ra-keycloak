@@ -8,12 +8,10 @@ This version uses [ra-keycloak](https://github.com/marmelab/ra-keycloak).
 Inside the demo folder, run:
 
 ```sh
-
-```sh
 make install
 ```
 
-You can launch a `Keycloak` server, a datebase `Postgres` and the `React-admin` via the command 
+You can launch a Keycloak server, a Postgres database and the react-admin Admin app via the command:
 
 ```sh
 make start
