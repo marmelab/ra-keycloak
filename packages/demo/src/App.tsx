@@ -79,44 +79,52 @@ const App = () => {
             title="Example Admin"
             layout={Layout}
         >
-            <CustomRoutes noLayout>
-                <Route
-                    path="/custom"
-                    element={<CustomRouteNoLayout title="Posts from /custom" />}
-                />
-            </CustomRoutes>
-            <Resource name="posts" {...posts} />
-            <Resource name="comments" {...comments} />
-            <Resource name="tags" {...tags} />
             {permissions => (
                 <>
-                    {permissions === 'admin' ? (
-                        <Resource name="users" {...users} />
-                    ) : null}
                     <CustomRoutes noLayout>
                         <Route
-                            path="/custom1"
+                            path="/custom"
                             element={
-                                <CustomRouteNoLayout title="Posts from /custom1" />
+                                <CustomRouteNoLayout title="Posts from /custom" />
                             }
                         />
                     </CustomRoutes>
+                    <Resource name="posts" {...posts} />
+                    <Resource name="comments" {...comments} />
+                    <Resource name="tags" {...tags} />
+                    {permissions ? (
+                        <>
+                            {permissions === 'admin' ? (
+                                <Resource name="users" {...users} />
+                            ) : null}
+                            <CustomRoutes noLayout>
+                                <Route
+                                    path="/custom1"
+                                    element={
+                                        <CustomRouteNoLayout title="Posts from /custom1" />
+                                    }
+                                />
+                            </CustomRoutes>
+                            <CustomRoutes>
+                                <Route
+                                    path="/custom2"
+                                    element={
+                                        <CustomRouteLayout title="Posts from /custom2" />
+                                    }
+                                />
+                            </CustomRoutes>
+                        </>
+                    ) : null}
                     <CustomRoutes>
                         <Route
-                            path="/custom2"
+                            path="/custom3"
                             element={
-                                <CustomRouteLayout title="Posts from /custom2" />
+                                <CustomRouteLayout title="Posts from /custom3" />
                             }
                         />
                     </CustomRoutes>
                 </>
             )}
-            <CustomRoutes>
-                <Route
-                    path="/custom3"
-                    element={<CustomRouteLayout title="Posts from /custom3" />}
-                />
-            </CustomRoutes>
         </Admin>
     );
 };
