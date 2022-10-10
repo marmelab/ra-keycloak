@@ -8,68 +8,107 @@ export type PermissionsFunction = (decoded: KeycloakTokenParsed) => any;
  * An authProvider which handles authentication via the Keycloak server.
  *
  * @example
- * import dataProvider from "./dataProvider";
- * import i18nProvider from "./i18nProvider";
- * import Layout from "./Layout";
- * import posts from "./posts";
+ * ```tsx
+ * import React, { useState, useRef, useEffect } from 'react';
+ * import { Admin, Resource, AuthProvider, DataProvider } from 'react-admin';
+ * import simpleRestProvider from 'ra-data-simple-rest';
+ * import Keycloak, {
+ *     KeycloakConfig,
+ *     KeycloakTokenParsed,
+ *     KeycloakInitOptions,
+ * } from 'keycloak-js';
+ * import { keycloakAuthProvider, httpClient } from 'ra-keycloak';
  *
- * import Keycloak, { KeycloakConfig } from "keycloak-js";
- * import { keycloakAuthProvider } from "ra-keycloak/authProvider";
+ * import comments from './comments';
+ * import i18nProvider from './i18nProvider';
+ * import Layout from './Layout';
+ * import posts from './posts';
+ * import users from './users';
+ * import tags from './tags';
  *
- * const isPermitted = (decoded: KeycloakTokenParsed): boolean => {
- *   if (!decoded.resource_access) {
+ * const config: KeycloakConfig = {
+ *     url: '$KEYCLOAK_URL',
+ *     realm: '$KEYCLOAK_REALM',
+ *     clientId: '$KEYCLOAK_CLIENT_ID',
+ * };
+ *
+ * // here you can set options for the keycloak client
+ * const initOptions: KeycloakInitOptions = { onLoad: 'login-required' };
+ *
+ * // here you can implement the permission mapping logic for react-admin
+ * const getPermissions = (decoded: KeycloakTokenParsed) => {
+ *     const roles = decoded?.realm_access?.roles;
+ *     if (!roles) {
+ *         return false;
+ *     }
+ *     if (roles.includes('admin')) return 'admin';
+ *     if (roles.includes('user')) return 'user';
  *     return false;
- *   }
- *   const admin = decoded.resource_access["$KEYCLOAK_CLIENT_ID"].roles.find(
- *     (role) => role === "admin"
- *   );
- *   return !!admin;
+ * };
+ *
+ * const raKeycloakOptions = {
+ *     onPermissions: getPermissions,
  * };
  *
  * const App = () => {
- *   const [authProvider, setAuthProvider] = React.useState<AuthProvider | null>(
- *     null
- *   );
+ *     const [keycloak, setKeycloak] = useState<Keycloak>(undefined);
+ *     const authProvider = useRef<AuthProvider>(undefined);
+ *     const dataProvider = useRef<DataProvider>(undefined);
  *
- *   React.useEffect(() => {
- *     async function startAuthProvider() {
- *       const config: KeycloakConfig = {
- *          url: "$KEYCLOAK_URL",
- *          realm: "$KEYCLOAK_REALM",
- *          clientId: "$KEYCLOAK_CLIENT_ID",
- *       };
+ *     useEffect(() => {
+ *         const initKeyCloakClient = async () => {
+ *             // init the keycloak client
+ *             const keycloakClient = new Keycloak(config);
+ *             await keycloakClient.init(initOptions);
+ *             // use keycloakAuthProvider to create an authProvider
+ *             authProvider.current = keycloakAuthProvider(
+ *                 keycloakClient,
+ *                 raKeycloakOptions
+ *             );
+ *             // example dataProvider using the httpClient helper
+ *             dataProvider.current = simpleRestProvider(
+ *                 '$API_URL',
+ *                 httpClient(keycloakClient)
+ *             );
+ *             setKeycloak(keycloakClient);
+ *         };
+ *         if (!keycloak) {
+ *             initKeyCloakClient();
+ *         }
+ *     }, [keycloak]);
  *
- *       const keycloak = new Keycloak(config);
- *       await keycloak.init({ onLoad: "login-required" });
- *       const authProvider = keycloakAuthProvider(keycloak, {onPermissions: isPermitted});
- *       setAuthProvider(authProvider);
- *     }
- *     if (authProvider === null) {
- *       startAuthProvider();
- *     }
- *   }, [authProvider]);
+ *     // hide the admin until the keycloak client is ready
+ *     if (!keycloak) return <p>Loading...</p>;
  *
- *   // hide the admin until the data provider is ready
- *   if (!authProvider) return <p>Loading...</p>;
- *
- *   return (
- *     <Admin
- *       authProvider={authProvider}
- *       dataProvider={dataProvider}
- *       i18nProvider={i18nProvider}
- *       title="Example Admin"
- *       layout={Layout}
- *     >
- *       <>
- *         <Resource name="posts" {...posts} />
- *         {....}
- *       </>
- *     </Admin>
- *   );
+ *     return (
+ *         <Admin
+ *             authProvider={authProvider.current}
+ *             dataProvider={dataProvider.current}
+ *             i18nProvider={i18nProvider}
+ *             title="Example Admin"
+ *             layout={Layout}
+ *         >
+ *             {permissions => (
+ *                 <>
+ *                     <Resource name="posts" {...posts} />
+ *                     <Resource name="comments" {...comments} />
+ *                     <Resource name="tags" {...tags} />
+ *                     {permissions === 'admin' ? (
+ *                         <Resource name="users" {...users} />
+ *                     ) : null}
+ *                 </>
+ *             )}
+ *         </Admin>
+ *     );
  * };
+ * ```
  *
- * @param {PermissionsFunction} onPermissions the function to decide if the authenticated user has the right to access to a specific resource.
- * @returns {object} the authProvider object used by React-Admin.
+ * @param client the keycloak client
+ * @param options.onPermissions function used to transform the permissions fetched from Keycloak into a permissions object in the form of what your react-admin app expects
+ * @param options.loginRedirectUri URI used to override the redirect URI after successful login
+ * @param options.logoutRedirectUri URI used to override the redirect URI after successful logout
+ *
+ * @returns an authProvider ready to be used by React-Admin.
  */
 export const keycloakAuthProvider = (
     client: Keycloak,
@@ -102,7 +141,9 @@ export const keycloakAuthProvider = (
             return Promise.resolve(false);
         }
         const decoded = jwt_decode<KeycloakTokenParsed>(client.token);
-        return Promise.resolve(options.onPermissions(decoded));
+        return Promise.resolve(
+            options.onPermissions ? options.onPermissions(decoded) : decoded
+        );
     },
     async getIdentity() {
         if (client.token) {

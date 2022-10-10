@@ -4,7 +4,7 @@ import { fetchUtils } from 'react-admin';
 /**
  * The httpClient which adds headers needed by Keycloak in all requests.
  * @param keycloak the client for the Keycloak authentication server.
- * @returns the response for the resource
+ * @returns a function with the same definition as `httpClient`, which adds headers needed by Keycloak in all requests.
  */
 export const httpClient = (keycloak: Keycloak) => (
     url: any,
@@ -19,8 +19,8 @@ export const httpClient = (keycloak: Keycloak) => (
 
 /**
  * Return the headers needed by Keycloak.
- * @param keycloak the client for the Keycloak authentication server.
- * @param options the options
+ * @param token the Keycloak token
+ * @param options the fetch options (so that we do not override other headers)
  * @returns the headers needed by Keycloak
  */
 export const getKeycloakHeaders = (

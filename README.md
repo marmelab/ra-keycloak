@@ -2,91 +2,58 @@
 
 An auth provider for [react-admin](https://github.com/marmelab/react-admin) which handles authentication via a [Keycloak](https://www.keycloak.org/guides) server.
 
-This package provides:
+This repository contains:
+- The actual `ra-keycloak` package
+- A simple demo app you can run locally to try out `ra-keycloak`
 
--   A `keycloakAuthProvider` for react-admin
--   `httpClient` which adds headers needed by Keycloak in all requests.
+## The `ra-keycloak` package
 
-This package uses [keycloak-js](https://www.npmjs.com/package/keycloak-js) to handle the Keycloak authentication.
+- Please have a look at the [DOCUMENTATION](./packages/ra-keycloak/Readme.md)
+- And also why not the [source code](https://github.com/marmelab/ra-keycloak/tree/main/src/packages/ra-keycloak)
 
-## Installation
+## Simple Demo
 
-```sh
-yarn add ra-keycloak
-# or
-npm install --save ra-keycloak
-```
+### Prerequesites
 
-## Usage
+This demo requires **Docker** and **docker-compose** in order to start a local Keycloak server.
 
-```jsx
-// in src/App.js
-  import i18nProvider from "./i18nProvider";
-  import Layout from "./Layout";
-  import posts from "./posts";
+### Initial setup
 
-  import Keycloak, { KeycloakConfig } from "keycloak-js";
-  import { keycloakAuthProvider } from "ra-keycloak/authProvider";
+1. Clone this project
+1. Run `make install run` to install the dependencies, start the local Keycloak Server and start the Demo App
 
-  const isPermitted = (decoded: KeycloakTokenParsed): boolean => {
-    if (!decoded.resource_access) {
-      return false;
-    }
-    const admin = decoded.resource_access["$KEYCLOAK_CLIENT_ID"].roles.find(
-      (role) => role === "admin"
-    );
-    return !!admin;
-  };
-  
+We need to add some minimal configuration to our Keycloak server in order to use it. This need to be done from the Keycloak Admin Console.
 
-  const App = () => {
-    const [authProvider, setAuthProvider] = React.useState<AuthProvider | null>(
-      null
-    );
+1. Browse to http://localhost:8080/ (note: keycloak takes some time to start...)
+1. Go to **Administration Console**
+1. Login with the default credentials (admin / password)
+1. Create a new **Realm** named for instance `Marmelab`
+1. Create a new **Realm Role** named `admin`
+1. Create a new **Realm Role** named `user`
+1. Create a new **User** named `admin@marmelab.com`
+1. For `admin@marmelab.com`, under **Credentials**, set a new password (disable the temporary password tick)
+1. For `admin@marmelab.com`, under **Role mapping**, click **Assign role** and choose `admin`
+1. Create a new **User** named `user@marmelab.com`
+1. For `user@marmelab.com`, under **Credentials**, set a new password (disable the temporary password tick)
+1. For `user@marmelab.com`, under **Role mapping**, click **Assign role** and choose `user`
+1. Create a new **Client** and choose as **Client ID** `front-marmelab`. Leave all the other options to default.
+1. For Client `front-marmelab`, under **Settings**, edit the **Access settings** to the following:
+  - Root URL: http://localhost:8081/
+  - Home URL: http://localhost:8081/
+  - Valid redirect URIs: http://localhost:8081/*
+  - Valid post logout redirect URIs: http://localhost:8081/*
+  - Web origins: *
+15. Click **Save**. Your keycloak instance is fully configured.
 
-    const [dataProvider, setDataProvider] = React.useState<DataProvider | null>(
-      null
-    );
+### Using the Simple Demo
 
-    React.useEffect(() => {
-      async function startAuthProvider() {
-        const config: KeycloakConfig = {
-           url: "$KEYCLOAK_URL",
-           realm: "$KEYCLOAK_REALM",
-           clientId: "$KEYCLOAK_CLIENT_ID",
-        };
+Now that all is configured and running, you can browse to http://localhost:8081/ to access the React Admin App.
 
-        const keycloak = new Keycloak(config);
-        await keycloak.init({ onLoad: "login-required" });
-        const authProvider = keycloakAuthProvider(keycloak, {onPermissions: isPermitted});
-        setAuthProvider(authProvider);
-        setDataProvider(dataProvider);
-      }
-      if (authProvider === null) {
-        startAuthProvider();
-      }
-    }, [authProvider]);
+- Signing in with `user@marmelab.com` will only grant the `user` role permissions
+- Signing in with `admin@marmelab.com` will grant full `admin` role permissions, allowing for instance to see the 'Users' resource in the main menu
 
-    // hide the admin until the data provider is ready
-    if (!authProvider) return <p>Loading...</p>;
-
-    return (
-      <Admin
-        authProvider={authProvider}
-        dataProvider={dataProvider}
-        i18nProvider={i18nProvider}
-        title="Example Admin"
-        layout={Layout}
-      >
-        <>
-          <Resource name="posts" {...posts} />
-          {....}
-        </>
-      </Admin>
-    );
-  };
-```
+Feel free to play around with this demo, along with the Keycloak config, to understand better how it works!
 
 ## License
 
-This data provider is licensed under the MIT License and sponsored by [marmelab](https://marmelab.com).
+This repository and the code it contains is licensed under the MIT License and sponsored by [marmelab](https://marmelab.com).

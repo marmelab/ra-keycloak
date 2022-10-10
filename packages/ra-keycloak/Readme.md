@@ -5,7 +5,7 @@ An auth provider for [react-admin](https://github.com/marmelab/react-admin) whic
 This package provides:
 
 -   A `keycloakAuthProvider` for react-admin
--   `httpClient` which adds headers needed by Keycloak in all requests.
+-   A helper `httpClient` which adds headers needed by Keycloak in all requests.
 
 This package uses [keycloak-js](https://www.npmjs.com/package/keycloak-js) to handle the Keycloak authentication.
 
@@ -17,76 +17,115 @@ yarn add ra-keycloak
 npm install --save ra-keycloak
 ```
 
-## Usage
+## Example usage
 
 ```jsx
-// in src/App.js
-  import i18nProvider from "./i18nProvider";
-  import Layout from "./Layout";
-  import posts from "./posts";
+// in src/App.tsx
+import React, { useState, useRef, useEffect } from 'react';
+import { Admin, Resource, AuthProvider, DataProvider } from 'react-admin';
+import simpleRestProvider from 'ra-data-simple-rest';
+import Keycloak, {
+    KeycloakConfig,
+    KeycloakTokenParsed,
+    KeycloakInitOptions,
+} from 'keycloak-js';
+import { keycloakAuthProvider, httpClient } from 'ra-keycloak';
 
-  import Keycloak, { KeycloakConfig } from "keycloak-js";
-  import { keycloakAuthProvider } from "ra-keycloak/authProvider";
+import comments from './comments';
+import i18nProvider from './i18nProvider';
+import Layout from './Layout';
+import posts from './posts';
+import users from './users';
+import tags from './tags';
 
-  const isPermitted = (decoded: KeycloakTokenParsed): boolean => {
-    if (!decoded.resource_access) {
-      return false;
+const config: KeycloakConfig = {
+    url: '$KEYCLOAK_URL',
+    realm: '$KEYCLOAK_REALM',
+    clientId: '$KEYCLOAK_CLIENT_ID',
+};
+
+// here you can set options for the keycloak client
+const initOptions: KeycloakInitOptions = { onLoad: 'login-required' };
+
+// here you can implement the permission mapping logic for react-admin
+const getPermissions = (decoded: KeycloakTokenParsed) => {
+    const roles = decoded?.realm_access?.roles;
+    if (!roles) {
+        return false;
     }
-    const admin = decoded.resource_access["$KEYCLOAK_CLIENT_ID"].roles.find(
-      (role) => role === "admin"
-    );
-    return !!admin;
-  };
-  
+    if (roles.includes('admin')) return 'admin';
+    if (roles.includes('user')) return 'user';
+    return false;
+};
 
-  const App = () => {
-    const [authProvider, setAuthProvider] = React.useState<AuthProvider | null>(
-      null
-    );
+const raKeycloakOptions = {
+    onPermissions: getPermissions,
+};
 
-    const [dataProvider, setDataProvider] = React.useState<DataProvider | null>(
-      null
-    );
+const App = () => {
+    const [keycloak, setKeycloak] = useState<Keycloak>(undefined);
+    const authProvider = useRef<AuthProvider>(undefined);
+    const dataProvider = useRef<DataProvider>(undefined);
 
-    React.useEffect(() => {
-      async function startAuthProvider() {
-        const config: KeycloakConfig = {
-           url: "$KEYCLOAK_URL",
-           realm: "$KEYCLOAK_REALM",
-           clientId: "$KEYCLOAK_CLIENT_ID",
+    useEffect(() => {
+        const initKeyCloakClient = async () => {
+            // init the keycloak client
+            const keycloakClient = new Keycloak(config);
+            await keycloakClient.init(initOptions);
+            // use keycloakAuthProvider to create an authProvider
+            authProvider.current = keycloakAuthProvider(
+                keycloakClient,
+                raKeycloakOptions
+            );
+            // example dataProvider using the httpClient helper
+            dataProvider.current = simpleRestProvider(
+                '$API_URL',
+                httpClient(keycloakClient)
+            );
+            setKeycloak(keycloakClient);
         };
+        if (!keycloak) {
+            initKeyCloakClient();
+        }
+    }, [keycloak]);
 
-        const keycloak = new Keycloak(config);
-        await keycloak.init({ onLoad: "login-required" });
-        const authProvider = keycloakAuthProvider(keycloak, {onPermissions: isPermitted});
-        setAuthProvider(authProvider);
-        setDataProvider(dataProvider);
-      }
-      if (authProvider === null) {
-        startAuthProvider();
-      }
-    }, [authProvider]);
-
-    // hide the admin until the data provider is ready
-    if (!authProvider) return <p>Loading...</p>;
+    // hide the admin until the keycloak client is ready
+    if (!keycloak) return <p>Loading...</p>;
 
     return (
-      <Admin
-        authProvider={authProvider}
-        dataProvider={dataProvider}
-        i18nProvider={i18nProvider}
-        title="Example Admin"
-        layout={Layout}
-      >
-        <>
-          <Resource name="posts" {...posts} />
-          {....}
-        </>
-      </Admin>
+        <Admin
+            authProvider={authProvider.current}
+            dataProvider={dataProvider.current}
+            i18nProvider={i18nProvider}
+            title="Example Admin"
+            layout={Layout}
+        >
+            {permissions => (
+                <>
+                    <Resource name="posts" {...posts} />
+                    <Resource name="comments" {...comments} />
+                    <Resource name="tags" {...tags} />
+                    {permissions === 'admin' ? (
+                        <Resource name="users" {...users} />
+                    ) : null}
+                </>
+            )}
+        </Admin>
     );
-  };
+};
+export default App;
 ```
+
+## `keycloakAuthProvider` Parameters
+
+- `onPermissions` - _optional_ - function used to transform the permissions fetched from Keycloak into a permissions object in the form of what your react-admin app expects
+- `loginRedirectUri` - _optional_ - URI used to override the redirect URI after successful login
+- `logoutRedirectUri` - _optional_ - URI used to override the redirect URI after successful logout
+
+## Demo
+
+You can find a working demo, along with the source code, in this project's repository: https://github.com/marmelab/ra-keycloak
 
 ## License
 
-This data provider is licensed under the MIT License and sponsored by [marmelab](https://marmelab.com).
+This auth provider is licensed under the MIT License and sponsored by [marmelab](https://marmelab.com).
