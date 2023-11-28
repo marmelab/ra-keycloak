@@ -2,14 +2,18 @@
 
 An auth provider for [react-admin](https://github.com/marmelab/react-admin) which handles authentication via a [Keycloak](https://www.keycloak.org/guides) server.
 
+[![Documentation]][DocumentationLink] 
+[![Source Code]][SourceCodeLink] 
+
+[Documentation]: https://img.shields.io/badge/Documentation-green?style=for-the-badge
+[Source Code]: https://img.shields.io/badge/Source_Code-blue?style=for-the-badge
+
+[DocumentationLink]: ./packages/ra-keycloak/Readme.md 'Documentation'
+[SourceCodeLink]: https://github.com/marmelab/ra-keycloak/tree/main/packages/ra-keycloak 'Source Code'
+
 This repository contains:
 - The actual `ra-keycloak` package
 - A simple demo app you can run locally to try out `ra-keycloak`
-
-## The `ra-keycloak` package
-
-- Please have a look at the [DOCUMENTATION](./packages/ra-keycloak/Readme.md)
-- And also why not the [source code](https://github.com/marmelab/ra-keycloak/tree/main/src/packages/ra-keycloak)
 
 ## Simple Demo
 
