@@ -47,6 +47,7 @@ const getPermissions = (decoded: KeycloakTokenParsed) => {
 
 const App = () => {
     const [keycloak, setKeycloak] = useState<Keycloak>(undefined);
+    const initializingPromise = useRef<Promise<Keycloak>>(undefined);
     const authProvider = useRef<AuthProvider>(undefined);
     const dataProvider = useRef<DataProvider>(undefined);
 
@@ -61,11 +62,16 @@ const App = () => {
                 myDataProvider,
                 keycloakClient
             );
-            setKeycloak(keycloakClient);
+
+            return keycloakClient;
         };
-        if (!keycloak) {
-            initKeyCloakClient();
+        if (!initializingPromise.current) {
+            initializingPromise.current = initKeyCloakClient();
         }
+
+        initializingPromise.current.then(keycloakClient => {
+            setKeycloak(keycloakClient);
+        });
     }, [keycloak]);
 
     // hide the admin until the dataProvider and authProvider are ready

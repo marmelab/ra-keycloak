@@ -132,7 +132,7 @@ export const keycloakAuthProvider = (
         return Promise.resolve();
     },
     async checkAuth() {
-        return client.authenticated && client.token
+        return client.authenticated && !!client.token
             ? Promise.resolve()
             : Promise.reject('Failed to obtain access token.');
     },
