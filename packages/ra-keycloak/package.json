@@ -19,7 +19,7 @@
     },
     "dependencies": {
         "jwt-decode": "^3.1.2",
-        "keycloak-js": "^19.0.2",
+        "keycloak-js": "^23.0.1",
         "react-admin": "^4.4.0"
     },
     "scripts": {
