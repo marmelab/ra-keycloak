@@ -52,3 +52,14 @@ keycloak-logs: ## Display logs
 
 keycloak-stop: ## Stop the project with docker.
 	$(DOCKER_COMPOSE) down
+
+DOCKER_COMPOSE_LEGACY = docker-compose -p ra-keycloak-legacy -f ./packages/demo/docker-compose-legacy.yml
+
+keycloak-start-legacy: ## Start the legacy project with docker.
+	$(DOCKER_COMPOSE_LEGACY) up --force-recreate -d
+
+keycloak-logs-legacy: ## Display logs for the legacy project
+	$(DOCKER_COMPOSE_LEGACY) logs -f
+
+keycloak-stop-legacy: ## Stop the legacy project with docker.
+	$(DOCKER_COMPOSE_LEGACY) down
