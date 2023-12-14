@@ -1,6 +1,6 @@
 {
     "name": "ra-keycloak",
-    "version": "1.0.0",
+    "version": "1.0.1",
     "repository": "git@github.com:marmelab/ra-keycloak.git",
     "author": "Marmelab <contact@marmelab.com> (https://marmelab.com/)",
     "license": "MIT",
