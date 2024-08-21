@@ -5,9 +5,10 @@ import {
     Datagrid,
     TextField,
     Title,
+    type SortPayload,
 } from 'react-admin';
 
-const sort = { field: 'published_at', order: 'DESC' };
+const sort = { field: 'published_at', order: 'DESC' } as SortPayload;
 
 const CustomRouteLayout = ({ title = 'Posts' }) => {
     useAuthenticated();

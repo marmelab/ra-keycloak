@@ -12,6 +12,7 @@ import {
     ResourceContextProvider,
     EditButton,
     TranslatableInputs,
+    ListActions,
 } from 'react-admin';
 
 const TagEdit = () => {
@@ -28,10 +29,7 @@ const TagEdit = () => {
             </Edit>
             <ResourceContextProvider value="posts">
                 <List
-                    hasCreate={false}
-                    hasShow
-                    hasEdit
-                    hasList
+                    actions={<ListActions hasCreate={false} />}
                     resource="posts"
                     filter={{ tags: [id] }}
                     title=" "

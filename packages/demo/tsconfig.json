@@ -4,6 +4,7 @@
         "outDir": "lib",
         "rootDir": "src",
         "declaration": true,
+        "module": "esnext",
         "allowJs": false,
         "jsx": "react",
         "lib": ["es2017", "dom"],

@@ -38,7 +38,7 @@ test-unit: ## launch unit tests
 	yarn -s test-unit;
 
 run-demo:
-	@cd ./packages/demo && yarn start
+	@cd ./packages/demo && yarn dev
 
 run: keycloak-start run-demo
 
