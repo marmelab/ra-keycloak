@@ -42,7 +42,7 @@ run-demo:
 
 run: keycloak-start run-demo
 
-DOCKER_COMPOSE = docker-compose -p ra-keycloak -f ./packages/demo/docker-compose.yml
+DOCKER_COMPOSE = docker compose -p ra-keycloak -f ./packages/demo/docker-compose.yml
 
 keycloak-start: ## Start the project with docker.
 	$(DOCKER_COMPOSE) up --force-recreate -d
