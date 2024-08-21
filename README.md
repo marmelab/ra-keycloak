@@ -19,7 +19,7 @@ This repository contains:
 
 ### Prerequesites
 
-This demo requires **Docker** and **docker-compose** in order to start a local Keycloak server.
+This demo requires **Docker** and **docker compose** in order to start a local Keycloak server.
 
 ### Initial setup
 
