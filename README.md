@@ -28,7 +28,7 @@ This demo requires **Docker** and **docker compose** in order to start a local K
 
 We need to add some minimal configuration to our Keycloak server in order to use it. This need to be done from the Keycloak Admin Console.
 
-1. Browse to http://localhost:8080/ (note: keycloak takes some time to start...)
+1. Browse to http://localhost:8080/auth/ (note: keycloak takes some time to start...)
 1. Go to **Administration Console**
 1. Login with the default credentials (admin / password)
 1. Create a new **Realm** named for instance `Marmelab`
