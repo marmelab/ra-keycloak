@@ -51,9 +51,20 @@ const App = () => {
     const dataProvider = useRef<DataProvider>(undefined);
 
     useEffect(() => {
+        console.log('useEffect keycloak', keycloak);
         const initKeyCloakClient = async () => {
+            console.log('initKeyCloakClient');
+            console.log('config', config);
             const keycloakClient = new Keycloak(config);
-            await keycloakClient.init(initOptions);
+            console.log('keycloakClient 1', keycloakClient);
+            console.log('initOptions', initOptions);
+            try {
+                await keycloakClient.init(initOptions);
+            } catch (error) {
+                console.error('Keycloak init failed', error);
+            }
+            console.log('keycloak', keycloak);
+            console.log('keycloakClient 2', keycloakClient);
             authProvider.current = keycloakAuthProvider(keycloakClient, {
                 onPermissions: getPermissions,
             });
@@ -61,11 +72,15 @@ const App = () => {
                 myDataProvider,
                 keycloakClient
             );
+            console.log('keycloakClient 3', keycloakClient);
             setKeycloak(keycloakClient);
         };
+        console.log('end func');
         if (!keycloak) {
+            console.log('if true');
             initKeyCloakClient();
         }
+        console.log('end useEffect');
     }, [keycloak]);
 
     // hide the admin until the dataProvider and authProvider are ready
