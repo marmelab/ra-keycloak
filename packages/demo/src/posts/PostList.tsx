@@ -24,8 +24,8 @@ import {
     TextField,
     TextInput,
     useTranslate,
-    type SortPayload,
-} from 'react-admin'; // eslint-disable-line import/no-unresolved
+} from 'react-admin';
+import type { SortPayload } from 'react-admin';
 
 import ResetViewsButton from './ResetViewsButton';
 export const PostIcon = BookIcon;
