@@ -32,6 +32,10 @@
         "lint": "eslint --fix --ext .js,.ts,.tsx \"./packages/**/src/**/*.{js,ts,tsx}\"",
         "prettier": "prettier --write \"./packages/**/src/**/*.{js,ts,tsx}\""
     },
+    "resolutions": {
+        "@typescript-eslint/parser": "^6.21.0",
+        "@typescript-eslint/eslint-plugin": "^6.21.0"
+    },
     "workspaces": [
         "packages/*"
     ]
