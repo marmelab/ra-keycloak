@@ -82,7 +82,7 @@ const App = () => {
             i18nProvider={i18nProvider}
             title="Example Admin"
             layout={Layout}
-            // Make sure you use the LoginPage provided by ra-keycloak
+            // Make sure you use the LoginPage provided by ra-keycloak if you didn't set the onLoad keycloak init option to 'login-required'
             loginPage={LoginPage}
         >
             {permissions => (
