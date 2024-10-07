@@ -1,4 +1,5 @@
-import Keycloak from 'keycloak-js';
+// FIXME: For some reason, TS does not find the types in the keycloak-js package (they are present though) unless we import from the lib folder
+import Keycloak from 'keycloak-js/lib/keycloak';
 import { fetchUtils } from 'react-admin';
 
 /**

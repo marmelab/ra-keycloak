@@ -29,7 +29,7 @@ import Keycloak, {
     KeycloakTokenParsed,
     KeycloakInitOptions,
 } from 'keycloak-js';
-import { keycloakAuthProvider, httpClient } from 'ra-keycloak';
+import { useKeycloakAuthProvider, httpClient, LoginPage } from 'ra-keycloak';
 
 import comments from './comments';
 import i18nProvider from './i18nProvider';
@@ -45,7 +45,11 @@ const config: KeycloakConfig = {
 };
 
 // here you can set options for the keycloak client
-const initOptions: KeycloakInitOptions = { onLoad: 'login-required' };
+const initOptions: KeycloakInitOptions = {
+    // Optional: makes Keycloak check that a user session already exists when it initializes
+    // and immediately consider the user as authenticated if one exists.
+    onLoad: 'check-sso',
+};
 
 // here you can implement the permission mapping logic for react-admin
 const getPermissions = (decoded: KeycloakTokenParsed) => {
@@ -58,47 +62,28 @@ const getPermissions = (decoded: KeycloakTokenParsed) => {
     return false;
 };
 
-const raKeycloakOptions = {
-    onPermissions: getPermissions,
-};
-
 const App = () => {
-    const [keycloak, setKeycloak] = useState<Keycloak>(undefined);
-    const authProvider = useRef<AuthProvider>(undefined);
-    const dataProvider = useRef<DataProvider>(undefined);
-
-    useEffect(() => {
-        const initKeyCloakClient = async () => {
-            // init the keycloak client
-            const keycloakClient = new Keycloak(config);
-            await keycloakClient.init(initOptions);
-            // use keycloakAuthProvider to create an authProvider
-            authProvider.current = keycloakAuthProvider(
-                keycloakClient,
-                raKeycloakOptions
-            );
-            // example dataProvider using the httpClient helper
-            dataProvider.current = simpleRestProvider(
-                '$API_URL',
-                httpClient(keycloakClient)
-            );
-            setKeycloak(keycloakClient);
-        };
-        if (!keycloak) {
-            initKeyCloakClient();
-        }
-    }, [keycloak]);
-
-    // hide the admin until the keycloak client is ready
-    if (!keycloak) return <p>Loading...</p>;
+    const keycloakClient = new Keycloak(config);
+    const authProvider = useKeycloakAuthProvider(keycloakClient, {
+        initOptions,
+        onPermissions: getPermissions,
+    });
+    const dataProvider = simpleRestProvider(
+        '$API_URL',
+        httpClient(keycloakClient)
+    );
+    // hide the admin until the authProvider is ready
+    if (!authProvider) return <p>Loading...</p>;
 
     return (
         <Admin
-            authProvider={authProvider.current}
-            dataProvider={dataProvider.current}
+            authProvider={authProvider}
+            dataProvider={dataProvider}
             i18nProvider={i18nProvider}
             title="Example Admin"
             layout={Layout}
+            // Make sure you use the LoginPage provided by ra-keycloak
+            loginPage={LoginPage}
         >
             {permissions => (
                 <>

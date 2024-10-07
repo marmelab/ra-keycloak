@@ -1,8 +1,7 @@
 import { AuthProvider } from 'react-admin';
-import Keycloak, { KeycloakTokenParsed } from 'keycloak-js';
+// FIXME: For some reason, TS does not find the types in the keycloak-js package (they are present though) unless we import from the lib folder
+import Keycloak, { KeycloakTokenParsed } from 'keycloak-js/lib/keycloak';
 import jwt_decode from 'jwt-decode';
-
-export type PermissionsFunction = (decoded: KeycloakTokenParsed) => any;
 
 /**
  * An authProvider which handles authentication via the Keycloak server.
@@ -120,21 +119,31 @@ export const keycloakAuthProvider = (
 ): AuthProvider => ({
     async login() {
         return client.login({
-            redirectUri: options.loginRedirectUri ?? window.location.origin,
+            redirectUri:
+                options.loginRedirectUri ??
+                `${window.location.origin}/#/auth-callback`,
         });
     },
     async logout() {
-        return client.logout({
-            redirectUri: options.logoutRedirectUri ?? window.location.origin,
-        });
+        return client
+            .logout({
+                redirectUri:
+                    options.logoutRedirectUri ??
+                    `${window.location.origin}#/login`,
+            })
+            .catch(error => {
+                console.error(error);
+            });
     },
     async checkError() {
-        return Promise.resolve();
+        return client.authenticated && client.token
+            ? Promise.resolve()
+            : Promise.reject(new Error('Failed to obtain access token.'));
     },
     async checkAuth() {
         return client.authenticated && client.token
             ? Promise.resolve()
-            : Promise.reject('Failed to obtain access token.');
+            : Promise.reject(new Error('Failed to obtain access token.'));
     },
     async getPermissions() {
         if (!client.token) {
@@ -154,4 +163,17 @@ export const keycloakAuthProvider = (
         }
         return Promise.reject('Failed to get identity.');
     },
+    handleCallback(params: any) {
+        return client.authenticated && client.token
+            ? Promise.resolve()
+            : Promise.reject('Failed to obtain access token.');
+    },
 });
+
+export type PermissionsFunction = (decoded: KeycloakTokenParsed) => any;
+
+export interface KeycloakAuthProviderOptions {
+    onPermissions?: PermissionsFunction;
+    loginRedirectUri?: string;
+    logoutRedirectUri?: string;
+}

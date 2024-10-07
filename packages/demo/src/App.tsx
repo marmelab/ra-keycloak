@@ -1,19 +1,14 @@
-/* eslint react/jsx-key: off */
-import React, { useState, useRef, useEffect } from 'react';
-import {
-    Admin,
-    Resource,
-    CustomRoutes,
-    AuthProvider,
-    DataProvider,
-} from 'react-admin';
+import React from 'react';
+import { Admin, Resource, CustomRoutes } from 'react-admin';
 import { Route } from 'react-router-dom';
 import Keycloak, {
     KeycloakConfig,
     KeycloakTokenParsed,
     KeycloakInitOptions,
+    // FIXME: For some reason, TS does not find the types in the keycloak-js package (they are present though) unless we import from the lib folder
+    // @ts-ignore
 } from 'keycloak-js';
-import { keycloakAuthProvider } from 'ra-keycloak';
+import { useKeycloakAuthProvider, LoginPage } from 'ra-keycloak';
 
 import comments from './comments';
 import CustomRouteLayout from './customRouteLayout';
@@ -33,7 +28,11 @@ const config: KeycloakConfig = {
     clientId: 'front-marmelab',
 };
 
-const initOptions: KeycloakInitOptions = { onLoad: 'login-required' };
+const initOptions: KeycloakInitOptions = {
+    // Optional: makes Keycloak check that a user session already exists when it initializes
+    // and immediately consider the user as authenticated if one exists.
+    onLoad: 'check-sso',
+};
 
 const getPermissions = (decoded: KeycloakTokenParsed) => {
     const roles = decoded?.realm_access?.roles;
@@ -46,53 +45,28 @@ const getPermissions = (decoded: KeycloakTokenParsed) => {
 };
 
 const App = () => {
-    const [keycloak, setKeycloak] = useState<Keycloak>(undefined);
-    const authProvider = useRef<AuthProvider>(undefined);
-    const dataProvider = useRef<DataProvider>(undefined);
+    const keycloakClient = new Keycloak(config);
+    const authProvider = useKeycloakAuthProvider(keycloakClient, {
+        initOptions,
+        onPermissions: getPermissions,
+    });
 
-    useEffect(() => {
-        console.log('useEffect keycloak', keycloak);
-        const initKeyCloakClient = async () => {
-            console.log('initKeyCloakClient');
-            console.log('config', config);
-            const keycloakClient = new Keycloak(config);
-            console.log('keycloakClient 1', keycloakClient);
-            console.log('initOptions', initOptions);
-            try {
-                await keycloakClient.init(initOptions);
-            } catch (error) {
-                console.error('Keycloak init failed', error);
-            }
-            console.log('keycloak', keycloak);
-            console.log('keycloakClient 2', keycloakClient);
-            authProvider.current = keycloakAuthProvider(keycloakClient, {
-                onPermissions: getPermissions,
-            });
-            dataProvider.current = keyCloakTokenDataProviderBuilder(
-                myDataProvider,
-                keycloakClient
-            );
-            console.log('keycloakClient 3', keycloakClient);
-            setKeycloak(keycloakClient);
-        };
-        console.log('end func');
-        if (!keycloak) {
-            console.log('if true');
-            initKeyCloakClient();
-        }
-        console.log('end useEffect');
-    }, [keycloak]);
+    const dataProvider = keyCloakTokenDataProviderBuilder(
+        myDataProvider,
+        keycloakClient
+    );
 
     // hide the admin until the dataProvider and authProvider are ready
-    if (!keycloak) return <p>Loading...</p>;
+    if (!authProvider) return <p>Loading...</p>;
 
     return (
         <Admin
-            authProvider={authProvider.current}
-            dataProvider={dataProvider.current}
+            authProvider={authProvider}
+            dataProvider={dataProvider}
             i18nProvider={i18nProvider}
             title="Example Admin"
             layout={Layout}
+            loginPage={LoginPage}
         >
             {permissions => (
                 <>
