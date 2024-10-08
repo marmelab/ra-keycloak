@@ -8,7 +8,7 @@ import Keycloak, {
     // FIXME: For some reason, TS does not find the types in the keycloak-js package (they are present though) unless we import from the lib folder
     // @ts-ignore
 } from 'keycloak-js';
-import { useKeycloakAuthProvider, LoginPage } from 'ra-keycloak';
+import { LoginPage, keycloakAuthProvider } from 'ra-keycloak';
 
 import comments from './comments';
 import CustomRouteLayout from './customRouteLayout';
@@ -31,10 +31,11 @@ const config: KeycloakConfig = {
 const initOptions: KeycloakInitOptions = {
     // Optional: makes Keycloak check that a user session already exists when it initializes
     // and immediately consider the user as authenticated if one exists.
-    // onLoad: 'check-sso',
-    // Optional: makes Keycloak check that a user session already exists when it initializes and redirect them to the keycloak login page if not.
+    onLoad: 'check-sso',
+    // Optional: makes Keycloak check that a user session already exists when it initializes and redirect them to the Kkeycloak login page if not.
     // It's not necessary with react-admin as it already has a process for that (authProvider.checkAuth)
     // onLoad: 'login-required',
+    // redirectUri: window.location.origin + '/#/posts',
 };
 
 const getPermissions = (decoded: KeycloakTokenParsed) => {
@@ -47,21 +48,18 @@ const getPermissions = (decoded: KeycloakTokenParsed) => {
     return false;
 };
 
+const keycloakClient = new Keycloak(config);
+const authProvider = keycloakAuthProvider(keycloakClient, {
+    initOptions,
+    onPermissions: getPermissions,
+});
+
+const dataProvider = keyCloakTokenDataProviderBuilder(
+    myDataProvider,
+    keycloakClient
+);
+
 const App = () => {
-    const keycloakClient = new Keycloak(config);
-    const authProvider = useKeycloakAuthProvider(keycloakClient, {
-        initOptions,
-        onPermissions: getPermissions,
-    });
-
-    const dataProvider = keyCloakTokenDataProviderBuilder(
-        myDataProvider,
-        keycloakClient
-    );
-
-    // hide the admin until the dataProvider and authProvider are ready
-    if (!authProvider) return <p>Loading...</p>;
-
     return (
         <Admin
             authProvider={authProvider}

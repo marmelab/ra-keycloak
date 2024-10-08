@@ -17,26 +17,39 @@ yarn add ra-keycloak
 npm install --save ra-keycloak
 ```
 
-## Example usage
+## Usage
+
+Even though it is not required, we recommend you wrap your application inside a [Browser Router](https://marmelab.com/react-admin/Admin.html#using-a-custom-router) to avoid issues with Keycloak redirections after login.
 
 ```jsx
+// in src/index.tsx
+import * as React from 'react';
+import * as ReactDOM from 'react-dom/client';
+import { App } from './App';
+import { createBrowserRouter, RouterProvider } from 'react-router-dom';
+
+const container = document.getElementById('root');
+const root = ReactDOM.createRoot(container);
+const router = createBrowserRouter([{ path: '*', element: <App /> }]);
+
+root.render(
+    <React.StrictMode>
+        <RouterProvider router={router} />
+    </React.StrictMode>
+);
+
 // in src/App.tsx
-import React, { useState, useRef, useEffect } from 'react';
-import { Admin, Resource, AuthProvider, DataProvider } from 'react-admin';
+import * as React from 'react';
+import { Admin, Resource } from 'react-admin';
 import simpleRestProvider from 'ra-data-simple-rest';
 import Keycloak, {
     KeycloakConfig,
     KeycloakTokenParsed,
     KeycloakInitOptions,
 } from 'keycloak-js';
-import { useKeycloakAuthProvider, httpClient, LoginPage } from 'ra-keycloak';
-
-import comments from './comments';
-import i18nProvider from './i18nProvider';
-import Layout from './Layout';
+import { keycloakAuthProvider, httpClient, LoginPage } from 'ra-keycloak';
 import posts from './posts';
 import users from './users';
-import tags from './tags';
 
 const config: KeycloakConfig = {
     url: '$KEYCLOAK_URL',
@@ -62,34 +75,27 @@ const getPermissions = (decoded: KeycloakTokenParsed) => {
     return false;
 };
 
-const App = () => {
-    const keycloakClient = new Keycloak(config);
-    const authProvider = useKeycloakAuthProvider(keycloakClient, {
-        initOptions,
-        onPermissions: getPermissions,
-    });
-    const dataProvider = simpleRestProvider(
-        '$API_URL',
-        httpClient(keycloakClient)
-    );
-    // hide the admin until the authProvider is ready
-    if (!authProvider) return <p>Loading...</p>;
+const keycloakClient = new Keycloak(config);
+const authProvider = keycloakAuthProvider(keycloakClient, {
+    initOptions,
+    onPermissions: getPermissions,
+});
+const dataProvider = simpleRestProvider(
+    '$API_URL',
+    httpClient(keycloakClient)
+);
 
+export const App = () => {
     return (
         <Admin
             authProvider={authProvider}
             dataProvider={dataProvider}
-            i18nProvider={i18nProvider}
-            title="Example Admin"
-            layout={Layout}
             // Make sure you use the LoginPage provided by ra-keycloak if you didn't set the onLoad keycloak init option to 'login-required'
             loginPage={LoginPage}
         >
             {permissions => (
                 <>
                     <Resource name="posts" {...posts} />
-                    <Resource name="comments" {...comments} />
-                    <Resource name="tags" {...tags} />
                     {permissions === 'admin' ? (
                         <Resource name="users" {...users} />
                     ) : null}
@@ -98,14 +104,74 @@ const App = () => {
         </Admin>
     );
 };
-export default App;
 ```
 
 ## `keycloakAuthProvider` Parameters
 
-- `onPermissions` - _optional_ - function used to transform the permissions fetched from Keycloak into a permissions object in the form of what your react-admin app expects
-- `loginRedirectUri` - _optional_ - URI used to override the redirect URI after successful login
-- `logoutRedirectUri` - _optional_ - URI used to override the redirect URI after successful logout
+A function that returns an `authProvider`. It requires a Keycloak client as its first parameter.
+
+```tsx
+// in src/dataProvider.ts
+import { keycloakAuthProvider } from 'ra-keycloak';
+import { keycloakClient } from './keycloakClient';
+
+export const authProvider = keycloakAuthProvider(
+    httpClient(keycloakClient),
+    {
+        initOptions: onLoad: 'check-sso',
+    }
+);
+```
+
+It also accept a second parameter with the following options:
+
+| Option               | Required | Type     | Description                                                     |
+| `onPermissions`      | Required | Function | A function used to transform the permissions fetched from Keycloak into a permissions object in the form of what your react-admin app expects |
+| `loginRedirectUri`   |          | String   | The URI to which to redirect users after login |
+| `logoutRedirectUri`  |          | String   | The URI to which to redirect users after logout |
+| `initOptions`        |          | Object   | The options to pass to the Keycloak `init` function (See https://www.keycloak.org/securing-apps/javascript-adapter#_methods)  |
+
+**Tip**: This function will take care of initializing the Keycloak client if not already done.
+
+## `httpClient`
+
+An Http client you can pass to many React-Admin data providers that will add the Keycloak authentication token to the requests headers. It requires a Keycloak client as its first parameter.
+
+```tsx
+// in src/dataProvider.ts
+import { httpClient } from 'ra-keycloak';
+import simpleRestProvider from 'ra-data-simple-rest';
+import { keycloakClient } from './keycloakClient';
+
+export const dataProvider = simpleRestProvider(
+    '$API_URL',
+    httpClient(keycloakClient)
+);
+```
+
+## `<LoginPage>`
+
+A custom React-Admin login page that call the Keycloak `login` method and automatically set the redirect URI to [the `/auth-callback` route](https://marmelab.com/react-admin/Authentication.html#using-external-authentication-providers).
+
+```tsx
+// in src/Admin.tsx
+import * as React from 'react';
+import { Admin } from 'react-admin';
+import { LoginPage } from 'ra-keycloak';
+
+export const App = () => {
+    return (
+        <Admin
+            authProvider={authProvider}
+            dataProvider={dataProvider}
+            // Make sure you use the LoginPage provided by ra-keycloak if you didn't set the onLoad keycloak init option to 'login-required'
+            loginPage={LoginPage}
+        >
+            {/* ... */}
+        </Admin>
+    );
+};
+```
 
 ## Demo
 
