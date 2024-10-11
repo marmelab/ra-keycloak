@@ -6,6 +6,7 @@ This package provides:
 
 -   A `keycloakAuthProvider` for react-admin
 -   A helper `httpClient` which adds headers needed by Keycloak in all requests.
+-   A `<LoginPage>` component
 
 This package uses [keycloak-js](https://www.npmjs.com/package/keycloak-js) to handle the Keycloak authentication.
 
@@ -18,8 +19,6 @@ npm install --save ra-keycloak
 ```
 
 ## Usage
-
-Even though it is not required, we recommend you wrap your application inside a [Browser Router](https://marmelab.com/react-admin/Admin.html#using-a-custom-router) to avoid issues with Keycloak redirections after login.
 
 ```jsx
 // in src/index.tsx
@@ -65,6 +64,8 @@ const initOptions: KeycloakInitOptions = {
     // Optional: makes Keycloak check that a user session already exists when it initializes and redirect them to the Keycloak login page if not.
     // It's not necessary with react-admin as it already has a process for that (authProvider.checkAuth)
     // onLoad: 'login-required',
+    // Required when using react-router HashRouter (or createHashRouter)
+    // responseMode: 'query'
 };
 
 // here you can implement the permission mapping logic for react-admin
@@ -93,7 +94,7 @@ export const App = () => {
         <Admin
             authProvider={authProvider}
             dataProvider={dataProvider}
-            // Make sure you use the LoginPage provided by ra-keycloak if you didn't set the onLoad keycloak init option to 'login-required'
+            // Optional when using login-required init option on keycloak
             loginPage={LoginPage}
         >
             {permissions => (
@@ -175,6 +176,26 @@ export const App = () => {
     );
 };
 ```
+
+## Using ra-keycloak with the HashRouter
+
+If for some reason you can't use [`createBrowserRouter`](https://reactrouter.com/en/main/routers/create-browser-router) nor [`BrowserRouter`](https://reactrouter.com/en/main/router-components/browser-router), you'll have to set the `responseMode` Keycloak init option to `"query"`:
+
+```tsx
+const keycloakClient = new Keycloak({
+    url: '$KEYCLOAK_URL',
+    realm: '$KEYCLOAK_REALM',
+    clientId: '$KEYCLOAK_CLIENT_ID',
+});
+const authProvider = keycloakAuthProvider(keycloakClient, {
+    initOptions: {
+        responseMode: 'query',
+    },
+    onPermissions: getPermissions,
+});
+```
+
+This is because Keycloak passes its parameters for authentication in the URL hash fragment by default and it's not compatible with [createHashRouter](https://reactrouter.com/en/main/routers/create-hash-router) nor [`<HashRouter>`](https://reactrouter.com/en/main/router-components/hash-router).
 
 ## Demo
 
