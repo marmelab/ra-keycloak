@@ -1,6 +1,7 @@
 ## 2.0.0
 
 -   Upgrade `react-admin` to v5
+-   Upgrade `keycloak-js` to v26
 -   Remove prop-types
 
 # 1.0.1
