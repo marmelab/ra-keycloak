@@ -32,7 +32,7 @@ const initOptions: KeycloakInitOptions = {
     // Optional: makes Keycloak check that a user session already exists when it initializes
     // and immediately consider the user as authenticated if one exists.
     onLoad: 'check-sso',
-    // Optional: makes Keycloak check that a user session already exists when it initializes and redirect them to the Kkeycloak login page if not.
+    // Optional: makes Keycloak check that a user session already exists when it initializes and redirect them to the Keycloak login page if not.
     // It's not necessary with react-admin as it already has a process for that (authProvider.checkAuth)
     // onLoad: 'login-required',
     // redirectUri: window.location.origin + '/#/posts',

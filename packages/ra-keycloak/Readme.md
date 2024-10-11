@@ -62,6 +62,9 @@ const initOptions: KeycloakInitOptions = {
     // Optional: makes Keycloak check that a user session already exists when it initializes
     // and immediately consider the user as authenticated if one exists.
     onLoad: 'check-sso',
+    // Optional: makes Keycloak check that a user session already exists when it initializes and redirect them to the Keycloak login page if not.
+    // It's not necessary with react-admin as it already has a process for that (authProvider.checkAuth)
+    // onLoad: 'login-required',
 };
 
 // here you can implement the permission mapping logic for react-admin
@@ -116,9 +119,9 @@ import { keycloakAuthProvider } from 'ra-keycloak';
 import { keycloakClient } from './keycloakClient';
 
 export const authProvider = keycloakAuthProvider(
-    httpClient(keycloakClient),
+    keycloakClient,
     {
-        initOptions: onLoad: 'check-sso',
+        initOptions: { onLoad: 'check-sso' },
     }
 );
 ```
@@ -126,7 +129,7 @@ export const authProvider = keycloakAuthProvider(
 It also accept a second parameter with the following options:
 
 | Option               | Required | Type     | Description                                                     |
-| `onPermissions`      | Required | Function | A function used to transform the permissions fetched from Keycloak into a permissions object in the form of what your react-admin app expects |
+| `onPermissions`      |          | Function | A function used to transform the permissions fetched from Keycloak into a permissions object in the form of what your react-admin app expects |
 | `loginRedirectUri`   |          | String   | The URI to which to redirect users after login |
 | `logoutRedirectUri`  |          | String   | The URI to which to redirect users after logout |
 | `initOptions`        |          | Object   | The options to pass to the Keycloak `init` function (See https://www.keycloak.org/securing-apps/javascript-adapter#_methods)  |

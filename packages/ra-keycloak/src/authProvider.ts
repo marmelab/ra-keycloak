@@ -155,7 +155,7 @@ export const keycloakAuthProvider = (
         }
         throw new Error('Failed to get identity.');
     },
-    async handleCallback(params: any) {
+    async handleCallback() {
         await initKeyCloakClient(keycloakClient, options.initOptions);
         await isAuthenticated(keycloakClient);
 
