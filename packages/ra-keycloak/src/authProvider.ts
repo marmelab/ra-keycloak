@@ -131,7 +131,7 @@ export const keycloakAuthProvider = (
     async getPermissions() {
         await initKeyCloakClient(keycloakClient, options.initOptions);
         await isAuthenticated(keycloakClient);
-        if (!keycloakClient.token) {
+        if (keycloakClient.authenticated && keycloakClient.token) {
             return false;
         }
         const decoded = jwt_decode<KeycloakTokenParsed>(keycloakClient.token);
@@ -140,7 +140,7 @@ export const keycloakAuthProvider = (
     async getIdentity() {
         await initKeyCloakClient(keycloakClient, options.initOptions);
         await isAuthenticated(keycloakClient);
-        if (keycloakClient.token) {
+        if (keycloakClient.authenticated && keycloakClient.token) {
             const decoded = jwt_decode<KeycloakTokenParsed>(
                 keycloakClient.token
             );
@@ -154,7 +154,7 @@ export const keycloakAuthProvider = (
         await initKeyCloakClient(keycloakClient, options.initOptions);
         await isAuthenticated(keycloakClient);
 
-        if (!keycloakClient.authenticated) {
+        if (keycloakClient.authenticated && keycloakClient.token) {
             throw new Error('Failed to obtain access token.');
         }
     },
