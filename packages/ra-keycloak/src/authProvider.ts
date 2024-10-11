@@ -1,4 +1,4 @@
-import { AuthProvider, PreviousLocationStorageKey } from 'react-admin';
+import { AuthProvider, PreviousLocationStorageKey } from 'ra-core';
 // FIXME: For some reason, TS does not find the types in the keycloak-js package (they are present though) unless we import from the lib folder
 import Keycloak, {
     KeycloakTokenParsed,

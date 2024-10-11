@@ -1,6 +1,6 @@
 // FIXME: For some reason, TS does not find the types in the keycloak-js package (they are present though) unless we import from the lib folder
 import Keycloak from 'keycloak-js/lib/keycloak';
-import { fetchUtils } from 'react-admin';
+import { fetchUtils } from 'ra-core';
 
 /**
  * The httpClient which adds headers needed by Keycloak in all requests.
