@@ -151,12 +151,14 @@ export const keycloakAuthProvider = (
         throw new Error('Failed to get identity.');
     },
     async handleCallback() {
+        debugger;
         await initKeyCloakClient(keycloakClient, options.initOptions);
         await isAuthenticated(keycloakClient);
 
         if (keycloakClient.authenticated && keycloakClient.token) {
-            throw new Error('Failed to obtain access token.');
+            return;
         }
+        throw new Error('Failed to obtain access token.');
     },
 });
 
