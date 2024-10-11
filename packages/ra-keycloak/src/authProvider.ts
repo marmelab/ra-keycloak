@@ -103,15 +103,10 @@ export const keycloakAuthProvider = (
     },
     async logout() {
         await initKeyCloakClient(keycloakClient, options.initOptions);
-        return keycloakClient
-            .logout({
-                redirectUri:
-                    options.logoutRedirectUri ??
-                    `${window.location.origin}/login`,
-            })
-            .catch(error => {
-                console.error(error);
-            });
+        return keycloakClient.logout({
+            redirectUri:
+                options.logoutRedirectUri ?? `${window.location.origin}/login`,
+        });
     },
     async checkError() {
         await initKeyCloakClient(keycloakClient, options.initOptions);
