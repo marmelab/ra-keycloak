@@ -35,7 +35,8 @@ const initOptions: KeycloakInitOptions = {
     // Optional: makes Keycloak check that a user session already exists when it initializes and redirect them to the Keycloak login page if not.
     // It's not necessary with react-admin as it already has a process for that (authProvider.checkAuth)
     // onLoad: 'login-required',
-    // redirectUri: window.location.origin + '/#/posts',
+    // Required when using react-router HashRouter (or createHashRouter)
+    // responseMode: 'query',
 };
 
 const getPermissions = (decoded: KeycloakTokenParsed) => {
@@ -67,6 +68,7 @@ const App = () => {
             i18nProvider={i18nProvider}
             title="Example Admin"
             layout={Layout}
+            // Optional when using login-required init option on keycloak
             loginPage={LoginPage}
         >
             {permissions => (

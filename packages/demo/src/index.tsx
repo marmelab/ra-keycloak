@@ -9,6 +9,9 @@ const router = createBrowserRouter([{ path: '*', element: <App /> }]);
 
 root.render(
     <React.StrictMode>
+        {/* Comment to test HashRouter */}
         <RouterProvider router={router} />
+        {/* Uncomment to test HashRouter */}
+        {/* <App /> */}
     </React.StrictMode>
 );
