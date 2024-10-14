@@ -78,9 +78,11 @@ import jwt_decode from 'jwt-decode';
  * ```
  *
  * @param keycloakClient the keycloak client
- * @param options.onPermissions function used to transform the permissions fetched from Keycloak into a permissions object in the form of what your react-admin app expects
- * @param options.loginRedirectUri URI used to override the redirect URI after successful login
- * @param options.logoutRedirectUri URI used to override the redirect URI after successful logout
+ * @param options.authenticationTimeout The time to wait in milliseconds for Keycloak to detect authenticated users. Defaults to 2 seconds.
+ * @param options.initOptions Optional. The options to pass to the Keycloak client init function
+ * @param options.onPermissions Optional. function used to transform the permissions fetched from Keycloak into a permissions object in the form of what your react-admin app expects
+ * @param options.loginRedirectUri Optional. URI used to override the redirect URI after successful login
+ * @param options.logoutRedirectUri Optional. URI used to override the redirect URI after successful logout
  *
  * @returns an authProvider ready to be used by React-Admin.
  */
@@ -88,6 +90,7 @@ export const keycloakAuthProvider = (
     keycloakClient: Keycloak,
     options: {
         initOptions?: KeycloakInitOptions;
+        authenticationTimeout?: number;
         onPermissions?: PermissionsFunction;
         loginRedirectUri?: string;
         logoutRedirectUri?: string;
@@ -110,14 +113,14 @@ export const keycloakAuthProvider = (
     },
     async checkError() {
         await initKeyCloakClient(keycloakClient, options.initOptions);
-        await isAuthenticated(keycloakClient);
+        await isAuthenticated(keycloakClient, options.authenticationTimeout);
         if (!keycloakClient.authenticated || !keycloakClient.token) {
             throw new Error('Failed to obtain access token.');
         }
     },
     async checkAuth() {
         await initKeyCloakClient(keycloakClient, options.initOptions);
-        await isAuthenticated(keycloakClient);
+        await isAuthenticated(keycloakClient, options.authenticationTimeout);
         if (keycloakClient.authenticated && keycloakClient.token) {
             return;
         }
@@ -130,7 +133,7 @@ export const keycloakAuthProvider = (
     },
     async getPermissions() {
         await initKeyCloakClient(keycloakClient, options.initOptions);
-        await isAuthenticated(keycloakClient);
+        await isAuthenticated(keycloakClient, options.authenticationTimeout);
         if (keycloakClient.authenticated && keycloakClient.token) {
             return false;
         }
@@ -139,7 +142,7 @@ export const keycloakAuthProvider = (
     },
     async getIdentity() {
         await initKeyCloakClient(keycloakClient, options.initOptions);
-        await isAuthenticated(keycloakClient);
+        await isAuthenticated(keycloakClient, options.authenticationTimeout);
         if (keycloakClient.authenticated && keycloakClient.token) {
             const decoded = jwt_decode<KeycloakTokenParsed>(
                 keycloakClient.token
@@ -151,9 +154,8 @@ export const keycloakAuthProvider = (
         throw new Error('Failed to get identity.');
     },
     async handleCallback() {
-        debugger;
         await initKeyCloakClient(keycloakClient, options.initOptions);
-        await isAuthenticated(keycloakClient);
+        await isAuthenticated(keycloakClient, options.authenticationTimeout);
 
         if (keycloakClient.authenticated && keycloakClient.token) {
             return;
@@ -166,7 +168,7 @@ export const keycloakAuthProvider = (
  * It seems the Keycloak init function may initially return before having authenticated the user.
  * To ensure we have the correct state, we need to wait for the onAuthSuccess event.
  */
-const isAuthenticated = (keycloakClient: Keycloak) => {
+const isAuthenticated = (keycloakClient: Keycloak, timeout = 2000) => {
     return new Promise((resolve, reject) => {
         let authenticated = false;
         keycloakClient.onAuthSuccess = () => {
@@ -178,7 +180,7 @@ const isAuthenticated = (keycloakClient: Keycloak) => {
                 resolve(false);
                 keycloakClient.onAuthSuccess = null;
             }
-        }, 2000);
+        }, timeout);
 
         // Resolve immediately if already authenticated
         if (keycloakClient.authenticated && keycloakClient.token) {
@@ -193,9 +195,7 @@ let keycloakInitializationPromise: Promise<boolean> | undefined;
  */
 const initKeyCloakClient = async (
     keycloakClient: Keycloak,
-    initOptions: KeycloakInitOptions = {
-        messageReceiveTimeout: 10000,
-    }
+    initOptions: KeycloakInitOptions = {}
 ) => {
     if (!keycloakClient) {
         return;

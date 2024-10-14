@@ -129,11 +129,12 @@ export const authProvider = keycloakAuthProvider(
 
 It also accept a second parameter with the following options:
 
-| Option               | Required | Type     | Description                                                     |
-| `onPermissions`      |          | Function | A function used to transform the permissions fetched from Keycloak into a permissions object in the form of what your react-admin app expects |
-| `loginRedirectUri`   |          | String   | The URI to which to redirect users after login |
-| `logoutRedirectUri`  |          | String   | The URI to which to redirect users after logout |
-| `initOptions`        |          | Object   | The options to pass to the Keycloak `init` function (See https://www.keycloak.org/securing-apps/javascript-adapter#_methods)  |
+| Option                  | Required | Type     | Description |
+| `authenticationTimeout` |          | Number   | The time to wait in milliseconds for Keycloak to detect authenticated users. Defaults to 2 seconds. |
+| `initOptions`           |          | Object   | The options to pass to the Keycloak `init` function (See https://www.keycloak.org/securing-apps/javascript-adapter#_methods)  |
+| `loginRedirectUri`      |          | String   | The URI to which to redirect users after login |
+| `logoutRedirectUri`     |          | String   | The URI to which to redirect users after logout |
+| `onPermissions`         |          | Function | A function used to transform the permissions fetched from Keycloak into a permissions object in the form of what your react-admin app expects |
 
 **Tip**: This function will take care of initializing the Keycloak client if not already done.
 
