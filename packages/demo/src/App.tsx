@@ -53,6 +53,9 @@ const keycloakClient = new Keycloak(config);
 const authProvider = keycloakAuthProvider(keycloakClient, {
     initOptions,
     onPermissions: getPermissions,
+    /* Uncomment to test HashRouter */
+    // loginRedirectUri: '/#/auth-callback',
+    // logoutRedirectUri: '/#/login',
 });
 
 const dataProvider = keyCloakTokenDataProviderBuilder(

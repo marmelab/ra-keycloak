@@ -97,24 +97,42 @@ export const keycloakAuthProvider = (
     } = {}
 ): AuthProvider => ({
     async login() {
+        let redirectUri = `${window.location.origin}/auth-callback`;
+        if (options.loginRedirectUri) {
+            if (!options.loginRedirectUri.startsWith('http')) {
+                redirectUri = `${window.location.origin}${options.loginRedirectUri}`;
+            } else {
+                redirectUri = options.loginRedirectUri;
+            }
+        }
         await initKeyCloakClient(keycloakClient, options.initOptions);
         return keycloakClient.login({
-            redirectUri:
-                options.loginRedirectUri ??
-                `${window.location.origin}/auth-callback`,
+            redirectUri,
         });
     },
     async logout() {
+        let redirectUri = window.location.origin;
+        if (options.logoutRedirectUri) {
+            if (!options.logoutRedirectUri.startsWith('http')) {
+                redirectUri = `${window.location.origin}${options.logoutRedirectUri}`;
+            } else {
+                redirectUri = options.logoutRedirectUri;
+            }
+        }
         await initKeyCloakClient(keycloakClient, options.initOptions);
         return keycloakClient.logout({
-            redirectUri:
-                options.logoutRedirectUri ?? `${window.location.origin}/login`,
+            redirectUri,
         });
     },
     async checkError() {
         await initKeyCloakClient(keycloakClient, options.initOptions);
         await isAuthenticated(keycloakClient, options.authenticationTimeout);
         if (!keycloakClient.authenticated || !keycloakClient.token) {
+            // not authenticated: save the location that the user tried to access
+            localStorage.setItem(
+                PreviousLocationStorageKey,
+                window.location.href.replace(window.location.origin, '')
+            );
             throw new Error('Failed to obtain access token.');
         }
     },
@@ -124,11 +142,7 @@ export const keycloakAuthProvider = (
         if (keycloakClient.authenticated && keycloakClient.token) {
             return;
         }
-        // not authenticated: save the location that the user tried to access
-        localStorage.setItem(
-            PreviousLocationStorageKey,
-            window.location.href.replace(window.location.origin, '')
-        );
+
         throw new Error('Failed to obtain access token.');
     },
     async getPermissions() {
@@ -168,7 +182,7 @@ export const keycloakAuthProvider = (
  * It seems the Keycloak init function may initially return before having authenticated the user.
  * To ensure we have the correct state, we need to wait for the onAuthSuccess event.
  */
-const isAuthenticated = (keycloakClient: Keycloak, timeout = 2000) => {
+const isAuthenticated = (keycloakClient: Keycloak, timeout = 500) => {
     return new Promise((resolve, reject) => {
         let authenticated = false;
         keycloakClient.onAuthSuccess = () => {

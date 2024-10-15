@@ -180,7 +180,7 @@ export const App = () => {
 
 ## Using ra-keycloak with the HashRouter
 
-If for some reason you can't use [`createBrowserRouter`](https://reactrouter.com/en/main/routers/create-browser-router) nor [`BrowserRouter`](https://reactrouter.com/en/main/router-components/browser-router), you'll have to set the `responseMode` Keycloak init option to `"query"`:
+If for some reason you can't use [`createBrowserRouter`](https://reactrouter.com/en/main/routers/create-browser-router) nor [`BrowserRouter`](https://reactrouter.com/en/main/router-components/browser-router), you'll have to set the `responseMode` Keycloak init option to `"query"` and the `keycloakAuthProvider.loginRedirectUri` to `/#/auth-callback`. If your application does not have routes accessible to anonymous users, you should also set the `keycloakAuthProvider.logoutRedirectUri` to `/#/login`:
 
 ```tsx
 const keycloakClient = new Keycloak({
@@ -192,6 +192,8 @@ const authProvider = keycloakAuthProvider(keycloakClient, {
     initOptions: {
         responseMode: 'query',
     },
+    loginRedirectUri: `/#/auth-callback`,
+    logoutRedirectUri: `/#/login`,
     onPermissions: getPermissions,
 });
 ```
