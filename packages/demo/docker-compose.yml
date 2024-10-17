@@ -3,6 +3,7 @@ version: "3"
 volumes:
   postgres_data:
     driver: local
+  keycloak_storage:
 
 services:
 
@@ -35,3 +36,5 @@ services:
     depends_on:
       - postgres
     command: start-dev --http-relative-path /auth
+    volumes:
+      - keycloak_storage:/opt/keycloak/data

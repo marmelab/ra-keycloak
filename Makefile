@@ -38,11 +38,11 @@ test-unit: ## launch unit tests
 	yarn -s test-unit;
 
 run-demo:
-	@cd ./packages/demo && yarn start
+	@cd ./packages/demo && yarn dev
 
 run: keycloak-start run-demo
 
-DOCKER_COMPOSE = docker-compose -p ra-keycloak -f ./packages/demo/docker-compose.yml
+DOCKER_COMPOSE = docker compose -p ra-keycloak -f ./packages/demo/docker-compose.yml
 
 keycloak-start: ## Start the project with docker.
 	$(DOCKER_COMPOSE) up --force-recreate -d
@@ -52,14 +52,3 @@ keycloak-logs: ## Display logs
 
 keycloak-stop: ## Stop the project with docker.
 	$(DOCKER_COMPOSE) down
-
-DOCKER_COMPOSE_LEGACY = docker-compose -p ra-keycloak-legacy -f ./packages/demo/docker-compose-legacy.yml
-
-keycloak-start-legacy: ## Start the legacy project with docker.
-	$(DOCKER_COMPOSE_LEGACY) up --force-recreate -d
-
-keycloak-logs-legacy: ## Display logs for the legacy project
-	$(DOCKER_COMPOSE_LEGACY) logs -f
-
-keycloak-stop-legacy: ## Stop the legacy project with docker.
-	$(DOCKER_COMPOSE_LEGACY) down

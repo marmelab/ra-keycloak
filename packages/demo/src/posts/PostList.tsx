@@ -24,7 +24,8 @@ import {
     TextField,
     TextInput,
     useTranslate,
-} from 'react-admin'; // eslint-disable-line import/no-unresolved
+} from 'react-admin';
+import type { SortPayload } from 'react-admin';
 
 import ResetViewsButton from './ResetViewsButton';
 export const PostIcon = BookIcon;
@@ -72,7 +73,7 @@ const StyledDatagrid = styled(Datagrid)(({ theme }) => ({
     '& .publishedAt': { fontStyle: 'italic' },
 }));
 
-const PostListBulkActions = memo(({ children, ...props }) => (
+const PostListBulkActions = memo(({ ...props }: any) => (
     <Fragment>
         <ResetViewsButton {...props} />
         <BulkDeleteButton {...props} />
@@ -156,6 +157,6 @@ const PostList = () => {
     );
 };
 
-const tagSort = { field: 'name.en', order: 'ASC' };
+const tagSort = { field: 'name.en', order: 'ASC' } as SortPayload;
 
 export default PostList;

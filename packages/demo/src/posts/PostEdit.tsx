@@ -141,7 +141,7 @@ const PostEdit = () => {
                     <ImageInput
                         multiple
                         source="pictures"
-                        accept="image/*"
+                        accept={{ 'image/*': ['*'] }}
                         helperText=""
                     >
                         <ImageField source="src" title="title" />
@@ -156,16 +156,11 @@ const PostEdit = () => {
                                     <AutocompleteInput helperText={false} />
                                 </ReferenceInput>
                                 <FormDataConsumer>
-                                    {({
-                                        formData,
-                                        scopedFormData,
-                                        getSource,
-                                        ...rest
-                                    }) =>
+                                    {({ formData, scopedFormData, ...rest }) =>
                                         scopedFormData &&
                                         scopedFormData.user_id ? (
                                             <SelectInput
-                                                source={getSource('role')}
+                                                source="role"
                                                 choices={[
                                                     {
                                                         id: 'headwriter',

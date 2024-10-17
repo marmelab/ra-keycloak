@@ -1,39 +1,39 @@
 import * as React from 'react';
 import {
-    useGetList,
     useAuthenticated,
     Datagrid,
     TextField,
     Title,
+    useListController,
+    ListContextProvider,
 } from 'react-admin';
+import type { SortPayload } from 'react-admin';
 
-const sort = { field: 'published_at', order: 'DESC' };
+const sort = { field: 'published_at', order: 'DESC' } as SortPayload;
 
 const CustomRouteLayout = ({ title = 'Posts' }) => {
     useAuthenticated();
 
-    const { data, total, isLoading } = useGetList('posts', {
-        pagination: { page: 1, perPage: 10 },
+    const controllerProps = useListController({
+        resource: 'posts',
+        perPage: 10,
         sort,
     });
 
-    return !isLoading ? (
+    return !controllerProps.isLoading ? (
         <div>
             <Title title="Example Admin" />
             <h1>{title}</h1>
             <p>
-                Found <span className="total">{total}</span> posts !
+                Found <span className="total">{controllerProps.total}</span>{' '}
+                posts !
             </p>
-            <Datagrid
-                sort={sort}
-                data={data}
-                isLoading={isLoading}
-                total={total}
-                rowClick="edit"
-            >
-                <TextField source="id" sortable={false} />
-                <TextField source="title" sortable={false} />
-            </Datagrid>
+            <ListContextProvider value={controllerProps}>
+                <Datagrid resource="posts" rowClick="edit">
+                    <TextField source="id" sortable={false} />
+                    <TextField source="title" sortable={false} />
+                </Datagrid>
+            </ListContextProvider>
         </div>
     ) : null;
 };
