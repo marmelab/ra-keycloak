@@ -148,8 +148,8 @@ export const keycloakAuthProvider = (
     async getPermissions() {
         await initKeyCloakClient(keycloakClient, options.initOptions);
         await isAuthenticated(keycloakClient, options.authenticationTimeout);
-        if (keycloakClient.authenticated && keycloakClient.token) {
-            return false;
+        if (!keycloakClient.authenticated || !keycloakClient.token) {
+            return undefined;
         }
         const decoded = jwt_decode<KeycloakTokenParsed>(keycloakClient.token);
         return options.onPermissions ? options.onPermissions(decoded) : decoded;
@@ -170,6 +170,10 @@ export const keycloakAuthProvider = (
     async handleCallback() {
         await initKeyCloakClient(keycloakClient, options.initOptions);
         await isAuthenticated(keycloakClient, options.authenticationTimeout);
+        console.log(
+            keycloakClient,
+            localStorage.getItem(PreviousLocationStorageKey)
+        );
 
         if (keycloakClient.authenticated && keycloakClient.token) {
             return;

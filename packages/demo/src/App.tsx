@@ -1,4 +1,4 @@
-import React from 'react';
+import * as React from 'react';
 import { Admin, Resource, CustomRoutes } from 'react-admin';
 import { Route } from 'react-router-dom';
 import Keycloak, {
@@ -6,6 +6,7 @@ import Keycloak, {
     KeycloakTokenParsed,
     KeycloakInitOptions,
     // FIXME: For some reason, TS does not find the types in the keycloak-js package (they are present though) unless we import from the lib folder
+    // but we can't do that in Vite
     // @ts-ignore
 } from 'keycloak-js';
 import { LoginPage, keycloakAuthProvider } from 'ra-keycloak';
@@ -92,14 +93,6 @@ const App = () => {
                             {permissions === 'admin' ? (
                                 <Resource name="users" {...users} />
                             ) : null}
-                            <CustomRoutes noLayout>
-                                <Route
-                                    path="/custom1"
-                                    element={
-                                        <CustomRouteNoLayout title="Posts from /custom1" />
-                                    }
-                                />
-                            </CustomRoutes>
                             <CustomRoutes>
                                 <Route
                                     path="/custom2"
@@ -110,6 +103,14 @@ const App = () => {
                             </CustomRoutes>
                         </>
                     ) : null}
+                    <CustomRoutes noLayout>
+                        <Route
+                            path="/custom1"
+                            element={
+                                <CustomRouteNoLayout title="Posts from /custom1" />
+                            }
+                        />
+                    </CustomRoutes>
                     <CustomRoutes>
                         <Route
                             path="/custom3"
