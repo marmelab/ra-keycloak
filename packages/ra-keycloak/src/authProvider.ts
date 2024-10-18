@@ -189,21 +189,24 @@ export const keycloakAuthProvider = (
  * To ensure we have the correct state, we need to wait for the onAuthSuccess event.
  */
 const isAuthenticated = (keycloakClient: Keycloak, timeout = 500) => {
-    return new Promise((resolve, reject) => {
-        let authenticated = false;
-        keycloakClient.onAuthSuccess = () => {
-            resolve(true);
-            keycloakClient.onAuthSuccess = null;
-        };
-        setTimeout(() => {
-            if (!authenticated) {
-                resolve(false);
+    return new Promise(resolve => {
+        const timeoutId = setTimeout(() => {
+            if (!keycloakClient.authenticated) {
                 keycloakClient.onAuthSuccess = null;
+                resolve(false);
             }
         }, timeout);
 
+        keycloakClient.onAuthSuccess = () => {
+            clearTimeout(timeoutId);
+            keycloakClient.onAuthSuccess = null;
+            resolve(true);
+        };
+
         // Resolve immediately if already authenticated
         if (keycloakClient.authenticated && keycloakClient.token) {
+            clearTimeout(timeoutId);
+            keycloakClient.onAuthSuccess = null;
             return resolve(true);
         }
     });
