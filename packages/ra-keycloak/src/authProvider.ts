@@ -127,14 +127,10 @@ export const keycloakAuthProvider = (
     async checkError() {
         await initKeyCloakClient(keycloakClient, options.initOptions);
         await isAuthenticated(keycloakClient, options.authenticationTimeout);
-        if (!keycloakClient.authenticated || !keycloakClient.token) {
-            // not authenticated: save the location that the user tried to access
-            localStorage.setItem(
-                PreviousLocationStorageKey,
-                window.location.href.replace(window.location.origin, '')
-            );
-            throw new Error('Failed to obtain access token.');
+        if (keycloakClient.authenticated && keycloakClient.token) {
+            return;
         }
+        throw new Error('Failed to obtain access token.');
     },
     async checkAuth() {
         await initKeyCloakClient(keycloakClient, options.initOptions);
@@ -142,7 +138,14 @@ export const keycloakAuthProvider = (
         if (keycloakClient.authenticated && keycloakClient.token) {
             return;
         }
-
+        // not authenticated: save the location that the user tried to access
+        localStorage.setItem(
+            PreviousLocationStorageKey,
+            window.location.href
+                .replace(window.location.origin, '')
+                // Make sure we return a react-router path independent of the router type
+                .replace('/#/', '/')
+        );
         throw new Error('Failed to obtain access token.');
     },
     async getPermissions() {
@@ -170,13 +173,12 @@ export const keycloakAuthProvider = (
     async handleCallback() {
         await initKeyCloakClient(keycloakClient, options.initOptions);
         await isAuthenticated(keycloakClient, options.authenticationTimeout);
-        console.log(
-            keycloakClient,
-            localStorage.getItem(PreviousLocationStorageKey)
-        );
 
         if (keycloakClient.authenticated && keycloakClient.token) {
-            return;
+            return {
+                redirectTo:
+                    localStorage.getItem(PreviousLocationStorageKey) || '/',
+            };
         }
         throw new Error('Failed to obtain access token.');
     },
