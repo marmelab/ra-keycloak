@@ -1,6 +1,5 @@
 /* eslint react/jsx-key: off */
 import * as React from 'react';
-import PropTypes from 'prop-types';
 import { Edit, Identifier, SimpleForm, TextInput, required } from 'react-admin';
 
 const UserEditEmbedded = ({ id }: { id?: Identifier }) => (
@@ -15,11 +14,5 @@ const UserEditEmbedded = ({ id }: { id?: Identifier }) => (
         </SimpleForm>
     </Edit>
 );
-
-UserEditEmbedded.propTypes = {
-    record: PropTypes.object,
-    resource: PropTypes.string,
-    id: PropTypes.string,
-};
 
 export default UserEditEmbedded;

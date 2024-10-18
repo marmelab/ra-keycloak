@@ -1,9 +1,17 @@
 import React from 'react';
 import ReactDOM from 'react-dom/client';
 import App from './App';
+import { createBrowserRouter, RouterProvider } from 'react-router-dom';
 
 const container = document.getElementById('root');
 const root = ReactDOM.createRoot(container);
+const router = createBrowserRouter([{ path: '*', element: <App /> }]);
 
-root.render(<App />);
-// can't activate strict mode due to this weird issue https://github.com/react-keycloak/react-keycloak/issues/182
+root.render(
+    <React.StrictMode>
+        {/* Comment to test HashRouter */}
+        <RouterProvider router={router} />
+        {/* Uncomment to test HashRouter */}
+        {/* <App /> */}
+    </React.StrictMode>
+);
