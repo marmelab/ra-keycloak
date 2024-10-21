@@ -111,7 +111,7 @@ export const keycloakAuthProvider = (
         });
     },
     async logout() {
-        let redirectUri = window.location.origin;
+        let redirectUri = `${window.location.origin}/login`;
         if (options.logoutRedirectUri) {
             if (!options.logoutRedirectUri.startsWith('http')) {
                 redirectUri = `${window.location.origin}${options.logoutRedirectUri}`;
@@ -120,9 +120,12 @@ export const keycloakAuthProvider = (
             }
         }
         await initKeyCloakClient(keycloakClient, options.initOptions);
-        return keycloakClient.logout({
+        keycloakClient.logout({
             redirectUri,
         });
+        // The Keycloak client will (forcefully) do its own redirection, so we need to disable
+        // React-admin's redirection
+        return false;
     },
     async checkError() {
         await initKeyCloakClient(keycloakClient, options.initOptions);
@@ -173,12 +176,8 @@ export const keycloakAuthProvider = (
     async handleCallback() {
         await initKeyCloakClient(keycloakClient, options.initOptions);
         await isAuthenticated(keycloakClient, options.authenticationTimeout);
-
         if (keycloakClient.authenticated && keycloakClient.token) {
-            return {
-                redirectTo:
-                    localStorage.getItem(PreviousLocationStorageKey) || '/',
-            };
+            return;
         }
         throw new Error('Failed to obtain access token.');
     },
@@ -188,13 +187,17 @@ export const keycloakAuthProvider = (
  * It seems the Keycloak init function may initially return before having authenticated the user.
  * To ensure we have the correct state, we need to wait for the onAuthSuccess event.
  */
-const isAuthenticated = (keycloakClient: Keycloak, timeout = 500) => {
+const isAuthenticated = (keycloakClient: Keycloak, timeout = 1000) => {
     return new Promise(resolve => {
+        // Resolve immediately if already authenticated
+        if (keycloakClient.authenticated && keycloakClient.token) {
+            keycloakClient.onAuthSuccess = null;
+            return resolve(true);
+        }
+
         const timeoutId = setTimeout(() => {
-            if (!keycloakClient.authenticated) {
-                keycloakClient.onAuthSuccess = null;
-                resolve(false);
-            }
+            keycloakClient.onAuthSuccess = null;
+            resolve(!!keycloakClient.authenticated);
         }, timeout);
 
         keycloakClient.onAuthSuccess = () => {
@@ -202,13 +205,6 @@ const isAuthenticated = (keycloakClient: Keycloak, timeout = 500) => {
             keycloakClient.onAuthSuccess = null;
             resolve(true);
         };
-
-        // Resolve immediately if already authenticated
-        if (keycloakClient.authenticated && keycloakClient.token) {
-            clearTimeout(timeoutId);
-            keycloakClient.onAuthSuccess = null;
-            return resolve(true);
-        }
     });
 };
 
