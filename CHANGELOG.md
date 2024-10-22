@@ -27,7 +27,8 @@ const config: KeycloakConfig = {
     clientId: '$KEYCLOAK_CLIENT_ID',
 };
 
-const initOptions: KeycloakInitOptions = { onLoad: 'check-sso' };
+-const initOptions: KeycloakInitOptions = { onLoad: 'login-required' };
++const initOptions: KeycloakInitOptions = { onLoad: 'check-sso' };
 
 // here you can implement the permission mapping logic for react-admin
 const getPermissions = (decoded: KeycloakTokenParsed) => {
