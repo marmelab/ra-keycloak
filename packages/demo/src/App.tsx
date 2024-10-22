@@ -1,19 +1,15 @@
-/* eslint react/jsx-key: off */
-import React, { useState, useRef, useEffect } from 'react';
-import {
-    Admin,
-    Resource,
-    CustomRoutes,
-    AuthProvider,
-    DataProvider,
-} from 'react-admin';
+import * as React from 'react';
+import { Admin, Resource, CustomRoutes } from 'react-admin';
 import { Route } from 'react-router-dom';
 import Keycloak, {
     KeycloakConfig,
     KeycloakTokenParsed,
     KeycloakInitOptions,
+    // FIXME: For some reason, TS does not find the types in the keycloak-js package (they are present though) unless we import from the lib folder
+    // but we can't do that in Vite
+    // @ts-ignore
 } from 'keycloak-js';
-import { keycloakAuthProvider } from 'ra-keycloak';
+import { LoginPage, keycloakAuthProvider } from 'ra-keycloak';
 
 import comments from './comments';
 import CustomRouteLayout from './customRouteLayout';
@@ -33,7 +29,16 @@ const config: KeycloakConfig = {
     clientId: 'front-marmelab',
 };
 
-const initOptions: KeycloakInitOptions = { onLoad: 'login-required' };
+const initOptions: KeycloakInitOptions = {
+    // Optional: makes Keycloak check that a user session already exists when it initializes
+    // and immediately consider the user as authenticated if one exists.
+    onLoad: 'check-sso',
+    // Optional: makes Keycloak check that a user session already exists when it initializes and redirect them to the Keycloak login page if not.
+    // It's not necessary with react-admin as it already has a process for that (authProvider.checkAuth)
+    // onLoad: 'login-required',
+    // Required when using react-router HashRouter (or createHashRouter)
+    // responseMode: 'query',
+};
 
 const getPermissions = (decoded: KeycloakTokenParsed) => {
     const roles = decoded?.realm_access?.roles;
@@ -45,39 +50,30 @@ const getPermissions = (decoded: KeycloakTokenParsed) => {
     return false;
 };
 
+const keycloakClient = new Keycloak(config);
+const authProvider = keycloakAuthProvider(keycloakClient, {
+    initOptions,
+    onPermissions: getPermissions,
+    /* Uncomment to test HashRouter */
+    // loginRedirectUri: '/#/auth-callback',
+    // logoutRedirectUri: '/#/login',
+});
+
+const dataProvider = keyCloakTokenDataProviderBuilder(
+    myDataProvider,
+    keycloakClient
+);
+
 const App = () => {
-    const [keycloak, setKeycloak] = useState<Keycloak>(undefined);
-    const authProvider = useRef<AuthProvider>(undefined);
-    const dataProvider = useRef<DataProvider>(undefined);
-
-    useEffect(() => {
-        const initKeyCloakClient = async () => {
-            const keycloakClient = new Keycloak(config);
-            await keycloakClient.init(initOptions);
-            authProvider.current = keycloakAuthProvider(keycloakClient, {
-                onPermissions: getPermissions,
-            });
-            dataProvider.current = keyCloakTokenDataProviderBuilder(
-                myDataProvider,
-                keycloakClient
-            );
-            setKeycloak(keycloakClient);
-        };
-        if (!keycloak) {
-            initKeyCloakClient();
-        }
-    }, [keycloak]);
-
-    // hide the admin until the dataProvider and authProvider are ready
-    if (!keycloak) return <p>Loading...</p>;
-
     return (
         <Admin
-            authProvider={authProvider.current}
-            dataProvider={dataProvider.current}
+            authProvider={authProvider}
+            dataProvider={dataProvider}
             i18nProvider={i18nProvider}
             title="Example Admin"
             layout={Layout}
+            // Optional when using login-required init option on keycloak
+            loginPage={LoginPage}
         >
             {permissions => (
                 <>
@@ -97,14 +93,6 @@ const App = () => {
                             {permissions === 'admin' ? (
                                 <Resource name="users" {...users} />
                             ) : null}
-                            <CustomRoutes noLayout>
-                                <Route
-                                    path="/custom1"
-                                    element={
-                                        <CustomRouteNoLayout title="Posts from /custom1" />
-                                    }
-                                />
-                            </CustomRoutes>
                             <CustomRoutes>
                                 <Route
                                     path="/custom2"
@@ -115,6 +103,14 @@ const App = () => {
                             </CustomRoutes>
                         </>
                     ) : null}
+                    <CustomRoutes noLayout>
+                        <Route
+                            path="/custom1"
+                            element={
+                                <CustomRouteNoLayout title="Posts from /custom1" />
+                            }
+                        />
+                    </CustomRoutes>
                     <CustomRoutes>
                         <Route
                             path="/custom3"

@@ -19,7 +19,7 @@ This repository contains:
 
 ### Prerequesites
 
-This demo requires **Docker** and **docker-compose** in order to start a local Keycloak server.
+This demo requires **Docker** and **docker compose** in order to start a local Keycloak server.
 
 ### Initial setup
 
@@ -28,7 +28,7 @@ This demo requires **Docker** and **docker-compose** in order to start a local K
 
 We need to add some minimal configuration to our Keycloak server in order to use it. This need to be done from the Keycloak Admin Console.
 
-1. Browse to http://localhost:8080/ (note: keycloak takes some time to start...)
+1. Browse to http://localhost:8080/auth/ (note: keycloak takes some time to start...)
 1. Go to **Administration Console**
 1. Login with the default credentials (admin / password)
 1. Create a new **Realm** named for instance `Marmelab`
@@ -36,10 +36,10 @@ We need to add some minimal configuration to our Keycloak server in order to use
 1. Create a new **Realm Role** named `user`
 1. Create a new **User** named `admin@marmelab.com`
 1. For `admin@marmelab.com`, under **Credentials**, set a new password (disable the temporary password tick)
-1. For `admin@marmelab.com`, under **Role mapping**, click **Assign role** and choose `admin`
+1. For `admin@marmelab.com`, under **Role mapping**, click **Assign role**, select **Filter by realm roles** and choose `admin`
 1. Create a new **User** named `user@marmelab.com`
 1. For `user@marmelab.com`, under **Credentials**, set a new password (disable the temporary password tick)
-1. For `user@marmelab.com`, under **Role mapping**, click **Assign role** and choose `user`
+1. For `user@marmelab.com`, under **Role mapping**, click **Assign role**, select **Filter by realm roles** and choose `user`
 1. Create a new **Client** and choose as **Client ID** `front-marmelab`. Leave all the other options to default.
 1. For Client `front-marmelab`, under **Settings**, edit the **Access settings** to the following:
   - Root URL: http://localhost:8081/
