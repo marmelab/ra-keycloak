@@ -10,7 +10,7 @@ The setup has been drastically simplified:
 
 ```diff
 -import React, { useState, useRef, useEffect } from 'react';
-import React from 'react';
++import React from 'react';
 import { Admin } from 'react-admin';
 import simpleRestProvider from 'ra-data-simple-rest';
 import Keycloak, {
@@ -18,7 +18,8 @@ import Keycloak, {
     KeycloakTokenParsed,
     KeycloakInitOptions,
 } from 'keycloak-js';
-import { keycloakAuthProvider, httpClient } from 'ra-keycloak';
+-import { keycloakAuthProvider, httpClient } from 'ra-keycloak';
++import { keycloakAuthProvider, httpClient, LoginPage } from 'ra-keycloak';
 
 const config: KeycloakConfig = {
     url: '$KEYCLOAK_URL',
@@ -81,6 +82,7 @@ const App = () => {
         <Admin
             authProvider={authProvider.current}
             dataProvider={dataProvider.current}
++           loginPage={LoginPage}
         >
             // ...
         </Admin>
