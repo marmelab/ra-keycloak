@@ -130,6 +130,7 @@ export const authProvider = keycloakAuthProvider(
 It also accept a second parameter with the following options:
 
 | Option                  | Required | Type     | Description |
+|-------------------------|----------|----------|-------------|
 | `authenticationTimeout` |          | Number   | The time to wait in milliseconds for Keycloak to detect authenticated users. Defaults to 2 seconds. |
 | `initOptions`           |          | Object   | The options to pass to the Keycloak `init` function (See https://www.keycloak.org/securing-apps/javascript-adapter#_methods)  |
 | `loginRedirectUri`      |          | String   | The URI to which to redirect users after login |
