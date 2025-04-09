@@ -1,10 +1,10 @@
 import { AuthProvider, PreviousLocationStorageKey } from 'ra-core';
 // FIXME: For some reason, TS does not find the types in the keycloak-js package (they are present though) unless we import from the lib folder
-import Keycloak, {
-    KeycloakTokenParsed,
-    KeycloakInitOptions,
-} from 'keycloak-js/lib/keycloak';
 import jwt_decode from 'jwt-decode';
+import Keycloak, {
+    KeycloakInitOptions,
+    KeycloakTokenParsed,
+} from 'keycloak-js/lib/keycloak';
 
 /**
  * An authProvider which handles authentication via the Keycloak server.
@@ -77,8 +77,8 @@ import jwt_decode from 'jwt-decode';
  * };
  * ```
  *
- * @param keycloakClient the keycloak client
- * @param options.authenticationTimeout The time to wait in milliseconds for Keycloak to detect authenticated users. Defaults to 2 seconds.
+ * @param keycloakClient The keycloak client. If unitialized will be initialized; if already initialized the `Promise` returned from `init` must have already resolved.
+ * @param options.authenticationTimeout DEPRECATED: Unused by the provider
  * @param options.initOptions Optional. The options to pass to the Keycloak client init function
  * @param options.onPermissions Optional. function used to transform the permissions fetched from Keycloak into a permissions object in the form of what your react-admin app expects
  * @param options.loginRedirectUri Optional. URI used to override the redirect URI after successful login
@@ -90,144 +90,119 @@ export const keycloakAuthProvider = (
     keycloakClient: Keycloak,
     options: {
         initOptions?: KeycloakInitOptions;
-        authenticationTimeout?: number;
+        authenticationTimeout?: number; // unused, retained for compatibility
         onPermissions?: PermissionsFunction;
         loginRedirectUri?: string;
         logoutRedirectUri?: string;
     } = {}
-): AuthProvider => ({
-    async login() {
-        let redirectUri = `${window.location.origin}/auth-callback`;
-        if (options.loginRedirectUri) {
-            if (!options.loginRedirectUri.startsWith('http')) {
-                redirectUri = `${window.location.origin}${options.loginRedirectUri}`;
-            } else {
-                redirectUri = options.loginRedirectUri;
+): AuthProvider => {
+    let keycloakInitializationPromise: Promise<boolean> | null = null;
+
+    // If passed in client is already initialized, prevent re-initialization
+    // (This assumes that initialization is complete, i.e. the Promise that init returned has resolved)
+    if (keycloakClient.didInitialize) {
+        keycloakInitializationPromise = Promise.resolve(true);
+    }
+
+    /**
+     * This function ensures keycloak is initialized by this provider only once.
+     */
+    const initKeyCloakClient = async () => {
+        if (!keycloakInitializationPromise) {
+            keycloakInitializationPromise = keycloakClient.init(
+                options.initOptions
+            );
+        }
+
+        return keycloakInitializationPromise;
+    };
+
+    return {
+        async login() {
+            let redirectUri = `${window.location.origin}/auth-callback`;
+            if (options.loginRedirectUri) {
+                if (!options.loginRedirectUri.startsWith('http')) {
+                    redirectUri = `${window.location.origin}${options.loginRedirectUri}`;
+                } else {
+                    redirectUri = options.loginRedirectUri;
+                }
             }
-        }
-        await initKeyCloakClient(keycloakClient, options.initOptions);
-        return keycloakClient.login({
-            redirectUri,
-        });
-    },
-    async logout() {
-        let redirectUri = `${window.location.origin}/login`;
-        if (options.logoutRedirectUri) {
-            if (!options.logoutRedirectUri.startsWith('http')) {
-                redirectUri = `${window.location.origin}${options.logoutRedirectUri}`;
-            } else {
-                redirectUri = options.logoutRedirectUri;
+            await initKeyCloakClient();
+            return keycloakClient.login({
+                redirectUri,
+            });
+        },
+        async logout() {
+            let redirectUri = `${window.location.origin}/login`;
+            if (options.logoutRedirectUri) {
+                if (!options.logoutRedirectUri.startsWith('http')) {
+                    redirectUri = `${window.location.origin}${options.logoutRedirectUri}`;
+                } else {
+                    redirectUri = options.logoutRedirectUri;
+                }
             }
-        }
-        await initKeyCloakClient(keycloakClient, options.initOptions);
-        keycloakClient.logout({
-            redirectUri,
-        });
-        // The Keycloak client will (forcefully) do its own redirection, so we need to disable
-        // React-admin's redirection
-        return false;
-    },
-    async checkError() {
-        await initKeyCloakClient(keycloakClient, options.initOptions);
-        await isAuthenticated(keycloakClient, options.authenticationTimeout);
-        if (keycloakClient.authenticated && keycloakClient.token) {
-            return;
-        }
-        throw new Error('Failed to obtain access token.');
-    },
-    async checkAuth() {
-        await initKeyCloakClient(keycloakClient, options.initOptions);
-        await isAuthenticated(keycloakClient, options.authenticationTimeout);
-        if (keycloakClient.authenticated && keycloakClient.token) {
-            return;
-        }
-        // not authenticated: save the location that the user tried to access
-        localStorage.setItem(
-            PreviousLocationStorageKey,
-            window.location.href
-                .replace(window.location.origin, '')
-                // Make sure we return a react-router path independent of the router type
-                .replace('/#/', '/')
-        );
-        throw new Error('Failed to obtain access token.');
-    },
-    async getPermissions() {
-        await initKeyCloakClient(keycloakClient, options.initOptions);
-        await isAuthenticated(keycloakClient, options.authenticationTimeout);
-        if (!keycloakClient.authenticated || !keycloakClient.token) {
-            return undefined;
-        }
-        const decoded = jwt_decode<KeycloakTokenParsed>(keycloakClient.token);
-        return options.onPermissions ? options.onPermissions(decoded) : decoded;
-    },
-    async getIdentity() {
-        await initKeyCloakClient(keycloakClient, options.initOptions);
-        await isAuthenticated(keycloakClient, options.authenticationTimeout);
-        if (keycloakClient.authenticated && keycloakClient.token) {
+            await initKeyCloakClient();
+            keycloakClient.logout({
+                redirectUri,
+            });
+            // The Keycloak client will (forcefully) do its own redirection, so we need to disable
+            // React-admin's redirection
+            return false;
+        },
+        async checkError() {
+            await initKeyCloakClient();
+            if (keycloakClient.authenticated && keycloakClient.token) {
+                return;
+            }
+            throw new Error('Failed to obtain access token.');
+        },
+        async checkAuth() {
+            await initKeyCloakClient();
+            if (keycloakClient.authenticated && keycloakClient.token) {
+                return;
+            }
+            // not authenticated: save the location that the user tried to access
+            localStorage.setItem(
+                PreviousLocationStorageKey,
+                window.location.href
+                    .replace(window.location.origin, '')
+                    // Make sure we return a react-router path independent of the router type
+                    .replace('/#/', '/')
+            );
+            throw new Error('Failed to obtain access token.');
+        },
+        async getPermissions() {
+            await initKeyCloakClient();
+            if (!keycloakClient.authenticated || !keycloakClient.token) {
+                return undefined;
+            }
             const decoded = jwt_decode<KeycloakTokenParsed>(
                 keycloakClient.token
             );
-            const id = decoded.sub || '';
-            const fullName = decoded.preferred_username;
-            return { id, fullName };
-        }
-        throw new Error('Failed to get identity.');
-    },
-    async handleCallback() {
-        await initKeyCloakClient(keycloakClient, options.initOptions);
-        await isAuthenticated(keycloakClient, options.authenticationTimeout);
-        if (keycloakClient.authenticated && keycloakClient.token) {
-            return;
-        }
-        throw new Error('Failed to obtain access token.');
-    },
-});
-
-/**
- * It seems the Keycloak init function may initially return before having authenticated the user.
- * To ensure we have the correct state, we need to wait for the onAuthSuccess event.
- */
-const isAuthenticated = (keycloakClient: Keycloak, timeout = 1000) => {
-    return new Promise(resolve => {
-        // Resolve immediately if already authenticated
-        if (keycloakClient.authenticated && keycloakClient.token) {
-            keycloakClient.onAuthSuccess = null;
-            return resolve(true);
-        }
-
-        const timeoutId = setTimeout(() => {
-            keycloakClient.onAuthSuccess = null;
-            resolve(!!keycloakClient.authenticated);
-        }, timeout);
-
-        keycloakClient.onAuthSuccess = () => {
-            clearTimeout(timeoutId);
-            keycloakClient.onAuthSuccess = null;
-            resolve(true);
-        };
-    });
-};
-
-let keycloakInitializationPromise: Promise<boolean> | undefined;
-/**
- * This function ensures keycloak is initialized only once and only if needed.
- */
-const initKeyCloakClient = async (
-    keycloakClient: Keycloak,
-    initOptions: KeycloakInitOptions = {}
-) => {
-    if (!keycloakClient) {
-        return;
-    }
-
-    if (keycloakClient.didInitialize) {
-        return keycloakClient.authenticated;
-    }
-    if (!keycloakInitializationPromise) {
-        keycloakInitializationPromise = keycloakClient.init(initOptions);
-    }
-
-    return keycloakInitializationPromise;
+            return options.onPermissions
+                ? options.onPermissions(decoded)
+                : decoded;
+        },
+        async getIdentity() {
+            await initKeyCloakClient();
+            if (keycloakClient.authenticated && keycloakClient.token) {
+                const decoded = jwt_decode<KeycloakTokenParsed>(
+                    keycloakClient.token
+                );
+                const id = decoded.sub || '';
+                const fullName = decoded.preferred_username;
+                return { id, fullName };
+            }
+            throw new Error('Failed to get identity.');
+        },
+        async handleCallback() {
+            await initKeyCloakClient();
+            if (keycloakClient.authenticated && keycloakClient.token) {
+                return;
+            }
+            throw new Error('Failed to obtain access token.');
+        },
+    };
 };
 
 export type PermissionsFunction = (decoded: KeycloakTokenParsed) => any;
