@@ -1,5 +1,7 @@
-// FIXME: For some reason, TS does not find the types in the keycloak-js package (they are present though) unless we import from the lib folder
-import Keycloak from 'keycloak-js/lib/keycloak';
+// keycloak-js only exposes its types through its exports map, which the
+// node10 resolution of zshy's CJS build ignores. The ESM build checks them.
+// @ts-ignore
+import type Keycloak from 'keycloak-js';
 import { fetchUtils } from 'ra-core';
 
 /**
