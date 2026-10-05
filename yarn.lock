@@ -5926,10 +5926,10 @@ yocto-queue@^0.1.0:
   resolved "https://registry.yarnpkg.com/yocto-queue/-/yocto-queue-0.1.0.tgz#0294eb3dee05028d31ee1a5fa2c556a6aaf10a1b"
   integrity sha512-rVksvsnNCdJ/ohGc6xgPwyN8eheCxsiLM8mxuE/t/mOVqJewPuO1miLpTHQiRgTKCLexL4MeAFVagts7HmNZ2Q==
 
-zshy@^0.5.0:
-  version "0.5.0"
-  resolved "https://registry.yarnpkg.com/zshy/-/zshy-0.5.0.tgz#29060b90aa760ffac36dc19e7aea9035af3b976c"
-  integrity sha512-hI0wkXfWhd4gz2ydHDhnzv7ao7vJPMkvmHz9jzA7591uEEc8eAcKyi9P99nSE0GsPF6IHsydsJK2qQvGQ5IcDA==
+zshy@^0.8.0:
+  version "0.8.0"
+  resolved "https://registry.yarnpkg.com/zshy/-/zshy-0.8.0.tgz#2828ceda430c8141a881fbcb63c442b61d5bb692"
+  integrity sha512-KV0vW7y98w0spcIE08NgeIQtNT0TwaMYLNWn6WcS0QBO+j7DgDONLPjwivUEnSM8DzIPM5e6OAK4BezWqcYneA==
   dependencies:
     arg "^5.0.2"
     fast-glob "^3.3.2"
