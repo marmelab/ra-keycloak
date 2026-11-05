@@ -1,3 +1,15 @@
+## Unreleased
+
+- Publish modern ESM and CommonJS package exports ([#13](https://github.com/marmelab/ra-keycloak/pull/13))
+
+### Breaking Changes
+
+`ra-keycloak` now publishes its ES modules and CommonJS builds in `dist/`, behind an [`exports`](https://nodejs.org/api/packages.html#package-entry-points) map. Only the package root can be imported, so these undocumented paths no longer resolve:
+
+- the old build folders: `ra-keycloak/lib/*` and `ra-keycloak/esm/*`
+- the sources: `ra-keycloak/src/*`, even though they are still published
+- the manifest: `ra-keycloak/package.json`
+
 ## 2.0.0
 
 -   Upgrade `react-admin` to v5
