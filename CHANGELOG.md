@@ -1,6 +1,7 @@
 ## 3.0.0
 
 - Publish modern ESM and CommonJS package exports ([#13](https://github.com/marmelab/ra-keycloak/pull/13))
+- Compile to ES2020 instead of ES5, the syntax `keycloak-js` already ships, which shrinks the build by more than 40% ([#13](https://github.com/marmelab/ra-keycloak/pull/13))
 - Fix type declarations importing `keycloak-js/lib/keycloak`, which `keycloak-js` does not export, so the Keycloak types failed to resolve with `bundler` or `node16` module resolution. They now resolve with every `moduleResolution` setting ([#13](https://github.com/marmelab/ra-keycloak/pull/13))
 
 ### Breaking Changes
