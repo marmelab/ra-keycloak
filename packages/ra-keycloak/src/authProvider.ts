@@ -1,9 +1,11 @@
 import { AuthProvider, PreviousLocationStorageKey } from 'ra-core';
-// FIXME: For some reason, TS does not find the types in the keycloak-js package (they are present though) unless we import from the lib folder
-import Keycloak, {
+// keycloak-js is ESM-only and exposes its types through its exports map:
+// resolving it as an ES module makes them resolve from CJS builds and consumers.
+import type Keycloak from 'keycloak-js' with { 'resolution-mode': 'import' };
+import type {
     KeycloakTokenParsed,
     KeycloakInitOptions,
-} from 'keycloak-js/lib/keycloak';
+} from 'keycloak-js' with { 'resolution-mode': 'import' };
 import jwt_decode from 'jwt-decode';
 
 /**
