@@ -1,10 +1,11 @@
 import { AuthProvider, PreviousLocationStorageKey } from 'ra-core';
-// keycloak-js only exposes its types through its exports map, which the
-// node10 resolution of zshy's CJS build ignores. The ESM build checks them.
-// @ts-ignore
-import type Keycloak from 'keycloak-js';
-// @ts-ignore
-import type { KeycloakTokenParsed, KeycloakInitOptions } from 'keycloak-js';
+// keycloak-js is ESM-only and exposes its types through its exports map:
+// resolving it as an ES module makes them resolve from CJS builds and consumers.
+import type Keycloak from 'keycloak-js' with { 'resolution-mode': 'import' };
+import type {
+    KeycloakTokenParsed,
+    KeycloakInitOptions,
+} from 'keycloak-js' with { 'resolution-mode': 'import' };
 import jwt_decode from 'jwt-decode';
 
 /**

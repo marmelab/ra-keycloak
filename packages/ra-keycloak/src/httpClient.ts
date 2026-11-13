@@ -1,7 +1,6 @@
-// keycloak-js only exposes its types through its exports map, which the
-// node10 resolution of zshy's CJS build ignores. The ESM build checks them.
-// @ts-ignore
-import type Keycloak from 'keycloak-js';
+// keycloak-js is ESM-only and exposes its types through its exports map:
+// resolving it as an ES module makes them resolve from CJS builds and consumers.
+import type Keycloak from 'keycloak-js' with { 'resolution-mode': 'import' };
 import { fetchUtils } from 'ra-core';
 
 /**
@@ -9,16 +8,15 @@ import { fetchUtils } from 'ra-core';
  * @param keycloak the client for the Keycloak authentication server.
  * @returns a function with the same definition as `httpClient`, which adds headers needed by Keycloak in all requests.
  */
-export const httpClient = (keycloak: Keycloak) => (
-    url: any,
-    options: fetchUtils.Options | undefined
-) => {
-    const requestHeaders = getKeycloakHeaders(keycloak.token, options);
-    return fetchUtils.fetchJson(url, {
-        ...options,
-        headers: requestHeaders,
-    });
-};
+export const httpClient =
+    (keycloak: Keycloak) =>
+    (url: any, options: fetchUtils.Options | undefined) => {
+        const requestHeaders = getKeycloakHeaders(keycloak.token, options);
+        return fetchUtils.fetchJson(url, {
+            ...options,
+            headers: requestHeaders,
+        });
+    };
 
 /**
  * Return the headers needed by Keycloak.

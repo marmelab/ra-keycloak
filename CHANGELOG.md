@@ -1,7 +1,7 @@
-## v3.0.0
+## 3.0.0
 
 - Publish modern ESM and CommonJS package exports ([#13](https://github.com/marmelab/ra-keycloak/pull/13))
-- Fix type declarations importing `keycloak-js/lib/keycloak`, which `keycloak-js` does not export, so the Keycloak types failed to resolve with `bundler` or `node16` module resolution ([#13](https://github.com/marmelab/ra-keycloak/pull/13))
+- Fix type declarations importing `keycloak-js/lib/keycloak`, which `keycloak-js` does not export, so the Keycloak types failed to resolve with `bundler` or `node16` module resolution. They now resolve with every `moduleResolution` setting ([#13](https://github.com/marmelab/ra-keycloak/pull/13))
 
 ### Breaking Changes
 
@@ -10,6 +10,8 @@
 - the old build folders: `ra-keycloak/lib/*` and `ra-keycloak/esm/*`
 - the sources: `ra-keycloak/src/*`, even though they are still published
 - the manifest: `ra-keycloak/package.json`
+
+The type declarations now import `keycloak-js` with a `resolution-mode` import attribute, which TypeScript versions older than 5.3 cannot parse, even with `skipLibCheck`. TypeScript projects using `ra-keycloak` need TypeScript 5.3 or later.
 
 ## 2.0.0
 
