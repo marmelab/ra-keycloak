@@ -1,5 +1,6 @@
-// FIXME: For some reason, TS does not find the types in the keycloak-js package (they are present though) unless we import from the lib folder
-import Keycloak from 'keycloak-js/lib/keycloak';
+// keycloak-js is ESM-only and exposes its types through its exports map:
+// resolving it as an ES module makes them resolve from CJS builds and consumers.
+import type Keycloak from 'keycloak-js' with { 'resolution-mode': 'import' };
 import { fetchUtils } from 'ra-core';
 
 /**
@@ -7,16 +8,15 @@ import { fetchUtils } from 'ra-core';
  * @param keycloak the client for the Keycloak authentication server.
  * @returns a function with the same definition as `httpClient`, which adds headers needed by Keycloak in all requests.
  */
-export const httpClient = (keycloak: Keycloak) => (
-    url: any,
-    options: fetchUtils.Options | undefined
-) => {
-    const requestHeaders = getKeycloakHeaders(keycloak.token, options);
-    return fetchUtils.fetchJson(url, {
-        ...options,
-        headers: requestHeaders,
-    });
-};
+export const httpClient =
+    (keycloak: Keycloak) =>
+    (url: any, options: fetchUtils.Options | undefined) => {
+        const requestHeaders = getKeycloakHeaders(keycloak.token, options);
+        return fetchUtils.fetchJson(url, {
+            ...options,
+            headers: requestHeaders,
+        });
+    };
 
 /**
  * Return the headers needed by Keycloak.
